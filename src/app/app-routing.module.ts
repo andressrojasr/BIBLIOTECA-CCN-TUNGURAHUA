@@ -17,15 +17,11 @@ const routes: Routes = [
     loadChildren: () => import('./tabs/tabs.module')
       .then(m => m.TabsPageModule)
   },
-  // // Comodín: cualquier otra ruta vuelve a login
-  // {
-  //   path: '**',
-  //   redirectTo: 'login'
-  // },
+  // Comodín: cualquier otra ruta vuelve a login
   {
-    path: 'prueba',
-    loadChildren: () => import('./prueba/prueba.module').then( m => m.PruebaPageModule)
-  }
+    path: '**',
+    redirectTo: 'login'
+  },
 ];
 @NgModule({
   imports: [

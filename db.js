@@ -23,8 +23,44 @@ const db = new sqlite3.Database(dbPath, (err) => {
       `CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
-        password TEXT,
-        status INTEGER
+        password TEXT
+      );
+      CREATE TABLE IF NOT EXISTS books (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        titulo TEXT,
+        autor TEXT,
+        estanteria TEXT,
+        fila TEXT,
+        caja TEXT,
+        ejemplares INTEGER,
+      );
+      CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombres TEXT,
+        apellidos TEXT,
+        cedula TEXT,
+        profesion TEXT,
+        lugarTrabajo TEXT,
+        tipoUsuario INTEGER,
+        edad INTEGER,
+        direccion TEXT,
+        canton TEXT,
+        celular TEXT,
+        correo TEXT
+      );
+      CREATE TABLE IF NOT EXISTS prestamos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuarioId INTEGER,
+        fechaPrestamo TEXT,
+        fechaDevolucion TEXT,
+        FOREIGN KEY (usuarioId) REFERENCES usuarios(id)
+      );
+      CREATE TABLE IF NOT EXISTS prestamos_libros (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        prestamoId INTEGER,
+        libroId INTEGER,
+        FOREIGN KEY (prestamoId) REFERENCES prestamos(id),
+        FOREIGN KEY (libroId) REFERENCES books(id)
       );`,
       (err) => {
         if (err) {
@@ -37,8 +73,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
             } else if (!row) {
               // Insertar admin si no existe
               db.run(
-                `INSERT INTO users (username, password, status) VALUES (?, ?, ?)`,
-                ['admin', 'admin', 0],
+                `INSERT INTO users (username, password) VALUES (?, ?)`,
+                ['admin', 'admin'],
                 (err) => {
                   if (err) {
                     console.error('❌ Error al insertar usuario admin:', err);

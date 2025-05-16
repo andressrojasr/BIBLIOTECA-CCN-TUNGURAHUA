@@ -53,8 +53,9 @@ export class LoginPage implements OnInit {
        try {
           const response = await window.electronAPI.login(username, password);
           if (response.success) {
+            localStorage.setItem('user', JSON.stringify(response.user));
             const toast = await this.toastCtrl.create({
-              message: 'Login exitoso',
+              message: 'Inisio de sesión exitoso',
               duration: 2000,
               color: 'success'
             });
