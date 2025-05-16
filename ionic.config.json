@@ -1,0 +1,7 @@
+{
+  "name": "Biblioteca CCN Tungurahua",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
