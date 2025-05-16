@@ -1,0 +1,48 @@
+<app-header title="Gestión Bibliotecaria"></app-header>
+<ion-content [fullscreen]="true">
+  <div class="login-wrapper">
+    
+    <!-- Logo a la izquierda -->
+    <div class="logo-section">
+      <img  color="primary" src="assets/icon/Logo Colores.png" alt="Logo" class="logo-img animate-logo" />
+    </div>
+
+    <!-- Formulario a la derecha -->
+    <div class="form-section">
+      <h2>Iniciar Sesión</h2>
+
+      <form  class="login-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <ion-item>
+          <ion-input placeholder="Usuario" fill="outline" formControlName="username">
+            <ion-icon slot="start" color="primary" name="person" aria-hidden="true"></ion-icon>
+          </ion-input>
+        </ion-item>
+        <ion-text color="danger" *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.errors?.['required']">
+          <p class="ion-padding-start">Usuario requerido</p>
+        </ion-text>
+        <ion-text color="danger" *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.errors?.['minlength']">
+          <p class="ion-padding-start">El usuario debe tener al menos 5 caracteres</p>
+        </ion-text>
+        <ion-item>
+          <ion-input fill="outline" placeholder="Contraseña" [type]="type" formControlName="password">
+            <ion-icon slot="start" color="primary" name="lock-closed" aria-hidden="true"></ion-icon>
+            <ion-button fill="clear" slot="end" (click)="togglePasswordVisibility()">
+              <ion-icon slot="icon-only" [name]="icon" aria-hidden="true"></ion-icon>
+            </ion-button>
+          </ion-input>
+        </ion-item>
+        <ion-text color="danger" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']">
+          <p class="ion-padding-start">Contraseña requerida</p>
+        </ion-text>
+        <ion-text color="danger" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['minlength']">
+          <p class="ion-padding-start">La contraseña debe tener al menos 5 caracteres</p>
+        </ion-text>
+
+        <ion-button expand="block" type="submit" [disabled]="loginForm.invalid" (click)="onSubmit()">
+          Iniciar sesión
+        </ion-button>
+      </form>
+    </div>
+
+  </div>
+</ion-content>
