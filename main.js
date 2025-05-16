@@ -2,6 +2,9 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const { ipcMain } = require('electron');
 const db = require('./db');
+require('electron-reload')(__dirname, {
+  electron: require(`${__dirname}/node_modules/electron`)
+});
 
 function createWindow () {
   const win = new BrowserWindow({
@@ -13,8 +16,13 @@ function createWindow () {
       preload: path.join(__dirname, 'preload.js'),
     }
   });
-
-  win.loadFile(path.join(__dirname, 'www/index.html'));
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev) {
+    win.loadURL('http://localhost:4200');
+  }
+  else{
+    win.loadFile(path.join(__dirname, 'www/index.html'));
+  }
   win.webContents.openDevTools();
 }
 
