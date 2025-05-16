@@ -1,0 +1,28 @@
+import { Component, Input, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'app-header',
+  templateUrl: './header.component.html',
+  styleUrls: ['./header.component.scss'],
+  standalone: false,
+})
+export class HeaderComponent  implements OnInit {
+
+  @Input() title: string = '';
+  @Input() showBackButton: boolean = false;
+  @Input() showCloseSessionButton: boolean = false;
+  
+  constructor() { }
+
+  ngOnInit() {}
+
+  goBack() {
+    window.history.back();
+  }
+
+  closeSession() {
+    console.log('Session closed');
+  }
+
+
+}

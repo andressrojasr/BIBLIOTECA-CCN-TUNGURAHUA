@@ -1,0 +1,28 @@
+<ion-header [translucent]="false">
+  <ion-toolbar color="primary">
+    <!-- Botón de retroceder -->
+    <ion-buttons slot="start" style="margin-left: 15px;" *ngIf="showBackButton">
+      <ion-button shape="round" color="primary" fill="solid" (click)="goBack()">
+        Retroceder
+        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+    <!-- Logotipo e ícono -->
+    <ion-buttons slot="start">
+      <ion-img src="assets/icon/Logo Solo Blanco.png" alt="Logo" style="width: 50px; height: 50px; margin-right:0px; margin-left: 30px"></ion-img>
+    </ion-buttons>
+
+    <!-- Título centrado automáticamente si hay espacio -->
+    <ion-title>
+      <strong>{{title}}</strong> 
+      <div class="subtitle">Casa de la Cultura Tungurahua</div>
+    </ion-title>
+
+    <ion-buttons slot="end" style="margin-right: 15px;" *ngIf="showCloseSessionButton">
+      <ion-button color="danger" (click)="closeSession()">
+        Cerrar Sesión
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
