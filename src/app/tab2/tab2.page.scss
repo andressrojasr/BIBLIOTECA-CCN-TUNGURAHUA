@@ -1,54 +1,58 @@
 ion-content {
-  --background: #071e3d;
-  display: flex;
-  flex-direction: column;
-}
-
-.card-wrapper {
-  flex: 1;
+  --background: #f2f5f7;
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-ion-card {
-  width: 90%;
-  max-width: 800px;
-  color: black;
-  border: 3px inset var(--ion-color-primary);
+  flex-direction: column;
 }
 
 ion-searchbar {
+  flex: 1;
   --background: white;
   --color: #071e3d;
   --placeholder-color: #071e3d;
   margin: 10px;
 }
-
-ion-card-title {
-  --color: black;
+.table{
+  width: 90%;
 }
 
-ion-card-subtitle {
-  color: var(--ion-color-primary);
-}
-
-ion-col {
-  padding: 6px 0;
-}
-
-ion-col strong {
-  color: var(--ion-color-primary);
-}
-
-.card-header {
+.options{
+  padding-top: 40px;
+  padding-bottom: 5px;
+  width: 60%;
   display: flex;
-  flex-direction: column;
+  gap: 20px;
+  justify-content: left;
+  align-items: center;
+  margin: 0 auto;
+}
+.header-row {
+  text-align: start;
+  background-color: var(--ion-color-tertiary);
+  padding: 8px 0;
+  color: white;
+  border-radius: 8px;
+  font-weight: bold;
+  position: sticky;
+  top: 5px; /* se queda pegado en la parte superior */
+  z-index: 10; /* por encima del resto */
+  background-color: var(--ion-color-tertiary); /* asegúrate de tener fondo */
 }
 
-.action-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 5px;
+.first{
+  padding-left: 20px;
+  padding-right: -20px;
+}
+
+ion-row {
+  border-bottom: 1px solid #ddd;
+  padding: 8px 0;
+}
+
+.rows {
+  background-color: white;
+  margin-top: 16PX;
+  margin-bottom: 16px;
+  border-radius: 8px;
 }
