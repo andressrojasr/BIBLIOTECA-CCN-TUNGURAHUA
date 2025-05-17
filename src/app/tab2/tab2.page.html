@@ -1,11 +1,40 @@
 <app-header title="Gestión de libros" [showCloseSessionButton]="true"></app-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-searchbar mode="ios" animated="true" placeholder="Buscar Libro"></ion-searchbar>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+  <div class="card-wrapper">
+    <ion-card mode="ios" class="card">
+      <ion-card-header class="card-header">
+        <ion-card-subtitle>Libro</ion-card-subtitle>
+        <ion-card-title>
+          <ion-icon name="book" color="primary" style="margin-right: 8px;"></ion-icon>
+          El principito
+        </ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content class="card-content">
+        <ion-grid>
+          <ion-row>
+            <ion-col size="6"><ion-icon name="apps" color="primary" style="margin-right: 8px;"></ion-icon><strong>Código:</strong> 12345</ion-col>
+            <ion-col size="6"><ion-icon name="person-outline" color="primary" style="margin-right: 8px;"></ion-icon><strong>Autor:</strong> Casa de la Cultura</ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="6"><ion-icon name="navigate-outline" color="primary" style="margin-right: 8px;"></ion-icon><strong>Ubicación:</strong> Estante 1, Fila 2</ion-col>
+            <ion-col size="6"><ion-icon name="folder-open-outline" color="primary" style="margin-right: 8px;"></ion-icon><strong>Ejemplares:</strong> 10</ion-col>
+          </ion-row>
+          <ion-row class="action-buttons">
+            <ion-button color="tertiary">Editar</ion-button>
+            <ion-button color="primary">Eliminar</ion-button>
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+  </div>
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="padding: 15px;">
+    <ion-fab-button color="primary">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>
+
