@@ -1,5 +1,8 @@
-import { Component, ViewChild } from '@angular/core';
-import { IonContent } from '@ionic/angular';
+import { Component, inject, ViewChild, OnInit } from '@angular/core';
+import { AlertController, IonContent, ToastController } from '@ionic/angular';
+import { UtilsService } from '../services/utils.service';
+import { Book } from '../models/book.model';
+import { AddUpdateBookComponent } from '../shared/modals/add-update-book/add-update-book.component';
 
 @Component({
   selector: 'app-tab2',
@@ -7,9 +10,13 @@ import { IonContent } from '@ionic/angular';
   styleUrls: ['tab2.page.scss'],
   standalone: false,
 })
-export class Tab2Page {
+export class Tab2Page{
 
   @ViewChild(IonContent, { static: false }) content!: IonContent;
+
+  constructor(private utils: UtilsService, private toastCtrl: ToastController, private alertCtrl: AlertController) {
+    this.loadBooks();
+  }
 
   showScrollToTop = false;
 
@@ -22,35 +29,93 @@ export class Tab2Page {
     this.content.scrollToTop(300);
   }
   
-  books = [
-    { id: 1000, title: 'Cien Años de Soledad', author: 'Gabriel García Márquez', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 2000, title: '1984', author: 'George Orwell', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 3000, title: 'Don Quijote', author: 'Miguel de Cervantes', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 400, title: 'El Principito', author: 'Antoine de Saint-Exupéry', ubicacion: 'Estante 2, fila 3', ejemplares: 4},
-    { id: 1000, title: 'Cien Años de Soledad', author: 'Gabriel García Márquez', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 2000, title: '1984', author: 'George Orwell', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 3000, title: 'Don Quijote', author: 'Miguel de Cervantes', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 400, title: 'El Principito', author: 'Antoine de Saint-Exupéry', ubicacion: 'Estante 2, fila 3', ejemplares: 4},
-    { id: 1000, title: 'Cien Años de Soledad', author: 'Gabriel García Márquez', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 2000, title: '1984', author: 'George Orwell', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 3000, title: 'Don Quijote', author: 'Miguel de Cervantes', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 400, title: 'El Principito', author: 'Antoine de Saint-Exupéry', ubicacion: 'Estante 2, fila 3', ejemplares: 4},
-    { id: 1000, title: 'Cien Años de Soledad', author: 'Gabriel García Márquez', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 2000, title: '1984', author: 'George Orwell', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 3000, title: 'Don Quijote', author: 'Miguel de Cervantes', ubicacion: 'Estante 2, fila 3', ejemplares: 4 },
-    { id: 400, title: 'El Principito', author: 'Antoine de Saint-Exupéry', ubicacion: 'Estante 2, fila 3', ejemplares: 4}
-  ];
+  books: Book[] = [];
 
-  constructor() {}
 
-  editBook(book: any) {
-    console.log('Edit book:', book);
-    // Implement your edit logic here
+  async editBook(book: Book) {
+    let success = await this.utils.presentModal({
+      component: AddUpdateBookComponent,
+      cssClass: 'add-update-modal',
+      componentProps: { book }
+    })
+    if (success) {
+      this.loadBooks();
+    };
+  }
+  
+  async addBook(){
+    let success = await this.utils.presentModal({
+      component: AddUpdateBookComponent,
+      cssClass: 'add-update-modal',
+      componentProps: {  }
+    })
+    if (success) 'Agregado con exito';
   }
 
-  deleteBook(book: any) {
-    console.log('Delete book:', book);
-    // Implement your delete logic here
+
+  async loadBooks() {
+    try {
+      const result = await window.electronAPI.getBooks();
+      if (result.success) {
+        this.books = result.books || [];
+      } else {
+        console.warn('No se encontraron libros.');
+      }
+    } catch (err) {
+      console.error('Error al obtener libros:', err);
+    }
   }
 
+  async confirmDelete(book: Book) {
+    if (book.prestados > 0) {
+    const toast = await this.toastCtrl.create({
+      message: `No se puede eliminar el libro "${book.titulo}" porque tiene ejemplares prestados.`,
+      duration: 3000,
+      color: 'warning'
+    });
+    await toast.present();
+    return;
+    }
+    const alert = await this.alertCtrl.create({
+      header: '¿Eliminar libro?',
+      message: `¿Estás seguro de eliminar el libro ${book.titulo}?`,
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Eliminar',
+          handler: () => {
+            this.deleteBook(book.id);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async deleteBook(bookId: number) {
+    try {
+      const result = await window.electronAPI.deleteBook(bookId);
+      if (result.success) {
+        const toast = await this.toastCtrl.create({
+          message: 'Libro Eliminado exitosamente',
+          duration: 3000,
+          color: 'success'
+        });
+        await toast.present();
+        this.loadBooks(); // Vuelve a cargar los libros actualizados
+      } else {
+        const toast = await this.toastCtrl.create({
+          message: 'Error al eliminar el libro',
+          duration: 2000,
+          color: 'danger'
+        });
+        await toast.present();
+      }
+    } catch (err) {
+      console.error('❌ Error al eliminar el libro:', err);
+    }
+  }
 }

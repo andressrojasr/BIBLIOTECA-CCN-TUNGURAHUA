@@ -47,3 +47,74 @@ ipcMain.handle('login', async (event, username, password) => {
     );
   });
 });
+
+ipcMain.handle('insertBook', async (event, libro) => {
+  return new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO books (titulo, autor, estanteria, fila, caja, ejemplares, prestados) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [libro.titulo, libro.autor, libro.estanteria, libro.fila, libro.caja, libro.ejemplares, libro.prestados],
+        (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ success: true });
+          }
+        }
+      )
+  });
+});
+
+ipcMain.handle('getBooks', async (event) => {
+  return new Promise((resolve, reject) => {
+    db.all(
+      'SELECT * FROM books ORDER BY id DESC',
+      (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ success: true, books: rows });
+        }
+      }
+    );
+  });
+});
+
+ipcMain.handle('updateBook', async (event, book) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      UPDATE books
+      SET titulo = ?, autor = ?, estanteria = ?, fila = ?, caja = ?, ejemplares = ?, prestados = ?
+      WHERE id = ?
+    `;
+    const values = [
+      book.titulo,
+      book.autor,
+      book.estanteria,
+      book.fila,
+      book.caja,
+      book.ejemplares,
+      book.prestados,
+      book.id
+    ];
+
+    db.run(query, values, function (err) {
+      if (err) {
+        reject({ success: false, message: 'Error al actualizar el libro', error: err });
+      } else {
+        resolve({ success: true, message: 'Libro actualizado correctamente' });
+      }
+    });
+  });
+});
+
+ipcMain.handle('deleteBook', async (event, bookId) => {
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM books WHERE id = ?`, [bookId], function (err) {
+      if (err) {
+        reject({ success: false, message: 'Error al eliminar el libro', error: err });
+      } else {
+        resolve({ success: true, message: 'Libro eliminado correctamente' });
+      }
+    });
+  });
+});

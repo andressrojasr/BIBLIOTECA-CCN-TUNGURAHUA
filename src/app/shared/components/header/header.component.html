@@ -1,10 +1,14 @@
 <ion-header [translucent]="false">
   <ion-toolbar color="primary">
     <!-- Botón de retroceder -->
-    <ion-buttons slot="start" style="margin-left: 15px;" *ngIf="showBackButton">
-      <ion-button shape="round" color="primary" fill="solid" (click)="goBack()">
+    <ion-buttons slot="start" style="margin-left: 15px;" >
+      <ion-button shape="round" color="primary" fill="solid" (click)="goBack()" *ngIf="showBackButton">
         Retroceder
         <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
+        <ion-button shape="round" color="primary" fill="solid" (click)="dismissModal()" *ngIf="isModal">
+        <ion-icon slot="icon-only" name="close-circle-outline"></ion-icon>
+        Cerrar
       </ion-button>
     </ion-buttons>
 

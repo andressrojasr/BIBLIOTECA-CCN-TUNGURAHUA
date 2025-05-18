@@ -3,7 +3,7 @@
 <ion-content [fullscreen]="true" scrollEvents="true" (ionScroll)="onScroll($event)">
   <div class="options">
     <ion-searchbar mode="ios" animated="true" placeholder="Buscar Libro"></ion-searchbar>
-    <ion-button expand="full" color="tertiary" shape="round" style="--color: white;">
+    <ion-button expand="full" color="tertiary" shape="round" style="--color: white;" (click)="addBook()">
       <ion-icon name="add-circle-outline"></ion-icon>
       Agregar Libro
     </ion-button>
@@ -20,15 +20,15 @@
 
     <ion-row *ngFor="let book of books" class="rows ion-align-items-center">
       <ion-col size="1" class="first">{{ book.id }}</ion-col>
-      <ion-col size="3">{{ book.title }}</ion-col>
-      <ion-col size="2">{{ book.author }}</ion-col>
-      <ion-col size="3">{{ book.ubicacion }}</ion-col>
-      <ion-col size="1">{{ book.ejemplares }}</ion-col>
+      <ion-col size="3">{{ book.titulo }}</ion-col>
+      <ion-col size="2">{{ book.autor }}</ion-col>
+      <ion-col size="3">Estante: {{ book.estanteria }}, Fila: {{book.fila}}, Caja: {{book.caja}}</ion-col>
+      <ion-col size="1">Ejemplares: {{ book.ejemplares }}, Prestados: {{book.prestados}}</ion-col>
       <ion-col size="2">
         <ion-button color="tertiary" shape="round" (click)="editBook(book)">
           <ion-icon name="create-outline"></ion-icon>
         </ion-button>
-        <ion-button color="primary" shape="round" (click)="deleteBook(book.id)">
+        <ion-button color="primary" shape="round" (click)="confirmDelete(book)">
           <ion-icon name="trash-outline"></ion-icon>
         </ion-button>
       </ion-col>

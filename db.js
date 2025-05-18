@@ -17,15 +17,13 @@ const db = new sqlite3.Database(dbPath, (err) => {
     console.error('❌ Error al conectar a la base de datos:', err);
   } else {
     console.log('✅ Base de datos conectada:', dbPath);
-
-    // Crear tabla si no existe
-    db.run(
+    const createTables = [
       `CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
         password TEXT
-      );
-      CREATE TABLE IF NOT EXISTS books (
+      )`,
+      `CREATE TABLE IF NOT EXISTS books (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         titulo TEXT,
         autor TEXT,
@@ -33,8 +31,9 @@ const db = new sqlite3.Database(dbPath, (err) => {
         fila TEXT,
         caja TEXT,
         ejemplares INTEGER,
-      );
-      CREATE TABLE IF NOT EXISTS usuarios (
+        prestados INTEGER
+      )`,
+      `CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombres TEXT,
         apellidos TEXT,
@@ -47,47 +46,49 @@ const db = new sqlite3.Database(dbPath, (err) => {
         canton TEXT,
         celular TEXT,
         correo TEXT
-      );
-      CREATE TABLE IF NOT EXISTS prestamos (
+      )`,
+      `CREATE TABLE IF NOT EXISTS prestamos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuarioId INTEGER,
         fechaPrestamo TEXT,
         fechaDevolucion TEXT,
         FOREIGN KEY (usuarioId) REFERENCES usuarios(id)
-      );
-      CREATE TABLE IF NOT EXISTS prestamos_libros (
+      )`,
+      `CREATE TABLE IF NOT EXISTS prestamos_libros (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         prestamoId INTEGER,
         libroId INTEGER,
         FOREIGN KEY (prestamoId) REFERENCES prestamos(id),
         FOREIGN KEY (libroId) REFERENCES books(id)
-      );`,
-      (err) => {
+      )`
+    ];
+
+    // Ejecutar todas las sentencias secuencialmente
+    db.serialize(() => {
+      createTables.forEach((sql) => {
+        db.run(sql, (err) => {
+          if (err) {
+            console.error('❌ Error al crear tabla:', err.message);
+          }
+        });
+      });
+      // Verificar/insertar admin después de crear tablas
+      db.get(`SELECT * FROM users WHERE username = 'admin'`, (err, row) => {
         if (err) {
-          console.error('❌ Error al crear tabla users:', err);
-        } else {
-          // Verificar si el usuario "admin" ya existe
-          db.get(`SELECT * FROM users WHERE username = 'admin'`, (err, row) => {
+          console.error('❌ Error al consultar admin:', err);
+        } else if (!row) {
+          db.run(`INSERT INTO users (username, password) VALUES (?, ?)`, ['admin', 'admin'], (err) => {
             if (err) {
-              console.error('❌ Error al consultar admin:', err);
-            } else if (!row) {
-              // Insertar admin si no existe
-              db.run(
-                `INSERT INTO users (username, password) VALUES (?, ?)`,
-                ['admin', 'admin'],
-                (err) => {
-                  if (err) {
-                    console.error('❌ Error al insertar usuario admin:', err);
-                  }
-                }
-              );
+              console.error('❌ Error al insertar usuario admin:', err);
             } else {
-              console.log('ℹ️ Usuario admin ya existe');
+              console.log('✅ Usuario admin creado');
             }
           });
+        } else {
+          console.log('ℹ️ Usuario admin ya existe');
         }
-      }
-    );
+      });
+    });
   }
 });
 
