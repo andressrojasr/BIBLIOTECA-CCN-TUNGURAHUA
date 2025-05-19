@@ -1,5 +1,6 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
-import { NavController, ToastController } from '@ionic/angular';
+import { ModalController, NavController, ToastController } from '@ionic/angular';
+import { UtilsService } from 'src/app/services/utils.service';
 
 @Component({
   selector: 'app-header',
@@ -12,9 +13,12 @@ export class HeaderComponent  implements OnInit {
   @Input() title: string = '';
   @Input() showBackButton: boolean = false;
   @Input() showCloseSessionButton: boolean = false;
+  @Input() isModal: boolean = false;
+  
 
   navigateCtrl = inject(NavController);
   toastCtrl = inject(ToastController);
+  utils = inject(UtilsService);
   
   constructor() { }
 
@@ -37,4 +41,11 @@ export class HeaderComponent  implements OnInit {
             await toast.present();
     }
   }
+
+  dismissModal()
+  {
+    this.utils.dismissModal()
+  }
+
+  
 }

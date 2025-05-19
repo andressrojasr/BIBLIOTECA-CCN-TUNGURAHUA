@@ -2,14 +2,6 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavController, ToastController } from '@ionic/angular';
 
-declare global {
-  interface Window {
-    electronAPI: {
-      login: (username: string, password: string) => Promise<any>;
-    };
-  }
-}
-
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
@@ -55,7 +47,7 @@ export class LoginPage implements OnInit {
           if (response.success) {
             localStorage.setItem('user', JSON.stringify(response.user));
             const toast = await this.toastCtrl.create({
-              message: 'Inisio de sesión exitoso',
+              message: 'Inicio de sesión exitoso',
               duration: 2000,
               color: 'success'
             });
@@ -77,7 +69,6 @@ export class LoginPage implements OnInit {
           });
           await toast.present();
         }
-
     }
   }
 }
