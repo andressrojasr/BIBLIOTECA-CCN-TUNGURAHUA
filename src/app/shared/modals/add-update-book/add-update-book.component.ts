@@ -132,6 +132,6 @@ export class AddUpdateBookComponent  implements OnInit {
       });
       await toast.present();
     }
-}
+  }
 
 }

@@ -1,5 +1,58 @@
-<app-header title="Gestión de prestamos de usuarios" [showCloseSessionButton]="true"></app-header>
+<app-header title="Gestión de Usuarios" [showCloseSessionButton]="true"></app-header>
 
-<ion-content [fullscreen]="true">
-  
+<ion-content [fullscreen]="true" scrollEvents="true" (ionScroll)="onScroll($event)">
+  <div class="options">
+    <ion-searchbar mode="ios" animated="true" placeholder="Buscar Usuario" [(ngModel)]="searchTerm" (ionInput)="filterUsers()"></ion-searchbar>
+    <ion-button expand="full" color="tertiary" shape="round" style="--color: white;" (click)="addUser()">
+      <ion-icon name="add-circle-outline"></ion-icon>
+      Agregar Usuario
+    </ion-button>
+  </div>
+  <ion-grid class="table">
+    <ion-row class="header-row">
+      <ion-col size="1" class="first"><strong>Id</strong></ion-col>
+      <ion-col size="1"><strong>Nombres y Apellidos</strong></ion-col>
+      <ion-col size="1"><strong>Cédula</strong></ion-col>
+      <ion-col size="1"><strong>Profesión</strong></ion-col>
+      <ion-col size="1"><strong>Lugar de Trabajo</strong></ion-col>
+      <ion-col size="1"><strong>Tipo de Usuario</strong></ion-col>
+      <ion-col size="1"><strong>Edad</strong></ion-col>
+      <ion-col size="1"><strong>Dirección</strong></ion-col>
+      <ion-col size="1"><strong>Canton</strong></ion-col>
+      <ion-col size="1"><strong>Celular</strong></ion-col>
+      <ion-col size="1"><strong>Correo</strong></ion-col>
+    <ion-col size="1"><strong>Acciones</strong></ion-col>
+    </ion-row>
+
+    <ion-row *ngFor="let user of filteredUsers" class="rows ion-align-items-center">
+      <ion-col size="1" class="first">{{ user.id }}</ion-col>
+      <ion-col size="1">{{ user.nombres }} {{user.apellidos}}</ion-col>
+      <ion-col size="1">{{ user.cedula }}</ion-col>
+      <ion-col size="1">{{ user.profesion }}</ion-col>
+      <ion-col size="1">{{ user.lugarTrabajo }}</ion-col>
+      <ion-col size="1" *ngIf="user.tipoUsuario ==0">{{ 'Niño' }}</ion-col>
+      <ion-col size="1" *ngIf="user.tipoUsuario ==1">{{ 'Joven' }}</ion-col>
+      <ion-col size="1" *ngIf="user.tipoUsuario ==2">{{ 'Adulto' }}</ion-col>
+      <ion-col size="1" *ngIf="user.tipoUsuario ==3">{{ 'Adulto Mayor' }}</ion-col>
+      <ion-col size="1">{{ user.edad }}</ion-col>
+      <ion-col size="1">{{ user.direccion }}</ion-col>
+      <ion-col size="1">{{ user.canton }}</ion-col>
+      <ion-col size="1">{{ user.celular }}</ion-col>
+      <ion-col size="1">{{ user.correo }}</ion-col>
+      <ion-col size="1">
+        <ion-button color="tertiary" shape="round" (click)="editUser(user)">
+          <ion-icon name="create-outline"></ion-icon>
+        </ion-button>
+        <ion-button color="primary" shape="round" (click)="confirmDelete(user)">
+          <ion-icon name="trash-outline"></ion-icon>
+        </ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="padding: 15px;" *ngIf="showScrollToTop">
+    <ion-fab-button color="secondary" (click)="scrollToTop()">
+      <ion-icon name="chevron-up-circle"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>
+

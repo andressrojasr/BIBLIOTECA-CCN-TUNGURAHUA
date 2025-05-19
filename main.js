@@ -118,3 +118,78 @@ ipcMain.handle('deleteBook', async (event, bookId) => {
     });
   });
 });
+
+ipcMain.handle('getUsers', async (event) => {
+  return new Promise((resolve, reject) => {
+    db.all(
+      'SELECT * FROM usuarios ORDER BY id DESC',
+      (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ success: true, users: rows });
+        }
+      }
+    );
+  });
+});
+
+ipcMain.handle('insertUser', async (event, usuario) => {
+  return new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO usuarios (nombres, apellidos, cedula, profesion, lugarTrabajo, tipoUsuario, edad, direccion, canton, celular, correo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [usuario.nombres, usuario.apellidos, usuario.cedula, usuario.profesion, usuario.lugarTrabajo, usuario.tipoUsuario, usuario.edad, usuario.direccion, usuario.canton, usuario.celular, usuario.correo],
+        (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ success: true });
+          }
+        }
+      )
+  });
+});
+
+ipcMain.handle('updateUser', async (event, user) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      UPDATE usuarios
+      SET nombres = ?, apellidos = ?, cedula = ?, profesion = ?, lugarTrabajo = ?, tipoUsuario = ?, edad = ?, direccion = ?, canton = ?, celular = ?, correo = ?
+      WHERE id = ?
+    `;
+    const values = [
+      user.nombres,
+      user.apellidos,
+      user.cedula,
+      user.profesion,
+      user.lugarTrabajo,
+      user.tipoUsuario,
+      user.edad,
+      user.direccion,
+      user.canton,
+      user.celular,
+      user.correo,
+      user.id
+    ];
+
+    db.run(query, values, function (err) {
+      if (err) {
+        reject({ success: false, message: 'Error al actualizar el usuario', error: err });
+      } else {
+        resolve({ success: true, message: 'Usuario actualizado correctamente' });
+      }
+    });
+  });
+});
+
+ipcMain.handle('deleteUser', async (event, userId) => {
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM usuarios WHERE id = ?`, [userId], function (err) {
+      if (err) {
+        reject({ success: false, message: 'Error al eliminar usuario', error: err });
+      } else {
+        resolve({ success: true, message: 'Usuario eliminado correctamente' });
+      }
+    });
+  });
+});

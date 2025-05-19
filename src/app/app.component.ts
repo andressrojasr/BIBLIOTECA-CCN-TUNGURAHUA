@@ -8,6 +8,10 @@ declare global {
       getBooks: () => Promise<any>;
       updateBook: (book: any) => Promise<any>;
       deleteBook: (bookId: number) => Promise<any>;
+      getUsers: () => Promise<any>;
+      insertUser: (user: any) => Promise<any>;
+      updateUser: (user: any) => Promise<any>;
+      deleteUser: (userId: number) => Promise<any>;
     };
   }
 }
