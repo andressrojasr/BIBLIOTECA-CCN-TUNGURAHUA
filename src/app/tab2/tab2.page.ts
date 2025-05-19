@@ -30,6 +30,8 @@ export class Tab2Page{
   }
   
   books: Book[] = [];
+  filteredBooks: Book[] = [];
+  searchTerm: string = '';
 
 
   async editBook(book: Book) {
@@ -58,6 +60,7 @@ export class Tab2Page{
       const result = await window.electronAPI.getBooks();
       if (result.success) {
         this.books = result.books || [];
+        this.filteredBooks = this.books; // Inicializa filteredBooks con todos los libros
       } else {
         console.warn('No se encontraron libros.');
       }
@@ -117,5 +120,21 @@ export class Tab2Page{
     } catch (err) {
       console.error('❌ Error al eliminar el libro:', err);
     }
+  }
+
+  filterBooks() {
+          const searchTerm = this.searchTerm.toLowerCase();
+      
+          if (searchTerm.trim() === '') {
+            this.filteredBooks = this.books;
+          } else {
+            this.filteredBooks = this.books.filter(book => {
+              return (
+                book.titulo.toLowerCase().includes(searchTerm) ||
+                book.autor.toLowerCase().includes(searchTerm) ||
+                String(book.id).toLowerCase().includes(searchTerm)
+              );
+            });
+          }
   }
 }
