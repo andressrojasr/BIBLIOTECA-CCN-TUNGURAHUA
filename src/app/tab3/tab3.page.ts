@@ -3,21 +3,15 @@ import { Component, ViewChild } from '@angular/core';
 import { AlertController, IonContent, ToastController } from '@ionic/angular';
 import { UtilsService } from '../services/utils.service';
 import { User } from '../models/user.model';
-// Ya NO se importa directamente AddUpdateUserComponent aquí
-// import { AddUpdateUserComponent } from '../shared/modals/add-update-user/add-update-user.component';
+import { AddUpdateUserComponent } from '../shared/modals/add-update-user/add-update-user.component'; // ¡IMPORTANTE! AÑADE ESTA LÍNEA
 
-// Para poder usar AddUpdateUserComponent en el presentModal, aunque no se importa directamente
-// TS lo inferirá a través del SharedModule que se importa en Tab3PageModule.
-// Si aún así da el error, la única opción es declararlo directamente en este archivo
-// si es un componente no standalone, o hacer que AddUpdateUserComponent sea standalone.
-// Por ahora, asumimos que la configuración de módulos es suficiente.
-declare const AddUpdateUserComponent: any; // Declaración para evitar el error de TS2304 temporalmente
+// Elimina la línea 'declare const AddUpdateUserComponent: any;' si aún la tienes.
 
 @Component({
   selector: 'app-tab3',
   templateUrl: 'tab3.page.html',
   styleUrls: ['tab3.page.scss'],
-  standalone: false, // Confirmado: Tab3Page no es standalone
+  standalone: false,
 })
 export class Tab3Page {
 
@@ -37,7 +31,7 @@ export class Tab3Page {
   scrollToTop() {
     this.content.scrollToTop(300);
   }
-  
+
   users: User[] = [];
   filteredUsers: User[] = [];
   searchTerm: string = '';
@@ -78,7 +72,7 @@ export class Tab3Page {
 
   async loadUsers() {
     try {
-      const result = await window.electronAPI.getUsers();
+      const result = await (window as any).electronAPI.getUsers();
       if (result.success) {
         this.users = result.data;
         this.filterUsers(); // Filtrar después de cargar
@@ -124,7 +118,7 @@ export class Tab3Page {
 
   async deleteUser(userId: number) {
     try {
-      const result = await window.electronAPI.deleteUser(userId);
+      const result = await (window as any).electronAPI.deleteUser(userId);
       if (result.success) {
         const toast = await this.toastCtrl.create({
           message: 'Usuario eliminado exitosamente',
@@ -148,7 +142,7 @@ export class Tab3Page {
 
   filterUsers() {
           const searchTerm = this.searchTerm.toLowerCase();
-      
+
           if (searchTerm.trim() === '') {
             this.filteredUsers = this.users;
           } else {
