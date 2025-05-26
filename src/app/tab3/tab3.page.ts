@@ -1,11 +1,8 @@
-// src/app/tab3/tab3.page.ts
-import { Component, ViewChild } from '@angular/core';
-import { AlertController, IonContent, ToastController } from '@ionic/angular';
+import { Component, ViewChild, OnInit } from '@angular/core';
+import { AlertController, IonContent, ModalController, ToastController } from '@ionic/angular'; // Asegúrate de que ModalController esté aquí
 import { UtilsService } from '../services/utils.service';
 import { User } from '../models/user.model';
-import { AddUpdateUserComponent } from '../shared/modals/add-update-user/add-update-user.component'; // ¡IMPORTANTE! AÑADE ESTA LÍNEA
-
-// Elimina la línea 'declare const AddUpdateUserComponent: any;' si aún la tienes.
+import { AddUpdateUserComponent } from '../shared/modals/add-update-user/add-update-user.component'; // Importa el componente AddUpdateUserComponent
 
 @Component({
   selector: 'app-tab3',
@@ -13,92 +10,116 @@ import { AddUpdateUserComponent } from '../shared/modals/add-update-user/add-upd
   styleUrls: ['tab3.page.scss'],
   standalone: false,
 })
-export class Tab3Page {
+export class Tab3Page implements OnInit {
 
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
-  constructor(private utils: UtilsService, private toastCtrl: ToastController, private alertCtrl: AlertController) {
+  users: User[] = []; // Esta será la lista completa de usuarios de la tabla 'usuarios'
+  filteredUsers: User[] = []; // Esta será la lista de usuarios filtrados
+  searchTerm: string = '';
+  showScrollToTop = false;
+
+  constructor(
+    private utils: UtilsService,
+    private toastCtrl: ToastController,
+    private alertCtrl: AlertController,
+    private modalCtrl: ModalController // Inyecta ModalController
+  ) {}
+
+  ngOnInit() {
     this.loadUsers();
   }
 
-  showScrollToTop = false;
-
-  onScroll(event: CustomEvent) {
-    const scrollTop = event.detail.scrollTop;
-    this.showScrollToTop = scrollTop > 150; // muestra si se ha scrolleado más de 150px
-  }
-
-  scrollToTop() {
-    this.content.scrollToTop(300);
-  }
-
-  users: User[] = [];
-  filteredUsers: User[] = [];
-  searchTerm: string = '';
-
-
-  async editUser(user: User) {
-    let success = await this.utils.presentModal({
-      component: AddUpdateUserComponent, // Aquí se usa el nombre directamente
-      cssClass: 'add-update-modal',
-      componentProps: { user },
-    });
-    if (success) {
-      this.loadUsers();
-      const toast = await this.toastCtrl.create({
-        message: 'Usuario actualizado con éxito',
-        duration: 3000,
-        color: 'success'
-      });
-      await toast.present();
-    }
-  }
-
-  async addUser() {
-    let success = await this.utils.presentModal({
-      component: AddUpdateUserComponent,
-      cssClass: 'add-update-modal',
-    });
-    if (success) {
-      this.loadUsers();
-      const toast = await this.toastCtrl.create({
-        message: 'Usuario agregado con éxito',
-        duration: 3000,
-        color: 'success'
-      });
-      await toast.present();
-    }
+  ionViewWillEnter() {
+    // Se ejecuta cada vez que la vista va a entrar en pantalla
+    this.loadUsers();
   }
 
   async loadUsers() {
     try {
-      const result = await (window as any).electronAPI.getUsers();
+      const result = await (window as any).electronAPI.getUsuarios();
       if (result.success) {
-        this.users = result.data;
-        this.filterUsers(); // Filtrar después de cargar
+        this.users = result.users;
+        this.filterUsers(); // Aplica el filtro inicial después de cargar los usuarios
+        console.log('✅ Usuarios cargados desde Electron:', this.users);
       } else {
-        const toast = await this.toastCtrl.create({
-          message: 'Error al cargar usuarios: ' + result.message,
-          duration: 2000,
-          color: 'danger'
-        });
-        await toast.present();
+        console.error('❌ Error cargando usuarios desde Electron (success: false):', result.message);
+        this.presentToast('Error al cargar usuarios: ' + result.message, 'danger');
       }
-    } catch (err) {
-      console.error('Error cargando usuarios desde Electron:', err);
-      const toast = await this.toastCtrl.create({
-        message: 'Error de comunicación con Electron al cargar usuarios.',
-        duration: 2000,
-        color: 'danger'
-      });
-      await toast.present();
+    } catch (error) {
+      console.error('❌ Error cargando usuarios desde Electron:', error);
+      this.presentToast('Error de comunicación al cargar usuarios.', 'danger');
     }
   }
 
-  async confirmDeleteUser(user: User) {
+  filterUsers() {
+    const searchTermLower = this.searchTerm.toLowerCase();
+
+    if (searchTermLower.trim() === '') {
+      this.filteredUsers = [...this.users]; // Crea una copia para no modificar el array original
+    } else {
+      this.filteredUsers = this.users.filter(user => {
+        return (
+          (user.nombres && user.nombres.toLowerCase().includes(searchTermLower)) ||
+          (user.apellidos && user.apellidos.toLowerCase().includes(searchTermLower)) ||
+          (user.cedula && user.cedula.toLowerCase().includes(searchTermLower)) ||
+          (user.profesion && user.profesion.toLowerCase().includes(searchTermLower)) ||
+          (user.lugarTrabajo && user.lugarTrabajo.toLowerCase().includes(searchTermLower)) ||
+          (user.direccion && user.direccion.toLowerCase().includes(searchTermLower)) ||
+          (user.canton && user.canton.toLowerCase().includes(searchTermLower)) ||
+          (user.celular && user.celular.toLowerCase().includes(searchTermLower)) ||
+          (user.correo && user.correo.toLowerCase().includes(searchTermLower)) ||
+          this.getTipoUsuarioString(user.tipoUsuario).toLowerCase().includes(searchTermLower)
+        );
+      });
+    }
+  }
+
+  getTipoUsuarioString(tipo: number | undefined): string {
+    if (tipo === undefined || tipo === null) return 'Desconocido'; // Manejo para tipo indefinido o nulo
+    switch (tipo) {
+      case 0: return 'Niño';
+      case 1: return 'Joven';
+      case 2: return 'Adulto';
+      case 3: return 'Adulto Mayor';
+      default: return 'Desconocido';
+    }
+  }
+
+  async addUser() {
+    const modal = await this.modalCtrl.create({
+      component: AddUpdateUserComponent,
+      componentProps: {
+        user: null // Para agregar un nuevo usuario, se pasa null
+      }
+    });
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data) { // Si el modal fue cerrado con éxito (se agregó/actualizó un usuario)
+      this.loadUsers(); // Recargar usuarios
+    }
+  }
+
+  async editUser(user: User) { // Método para editar usuario
+    const modal = await this.modalCtrl.create({
+      component: AddUpdateUserComponent,
+      componentProps: {
+        user: user // Se pasa el objeto de usuario existente para editar
+      }
+    });
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data) { // Si el modal fue cerrado con éxito (se agregó/actualizó un usuario)
+      this.loadUsers(); // Recargar usuarios
+    }
+  }
+
+  async confirmDelete(user: User) { // Método para confirmar y eliminar usuario
     const alert = await this.alertCtrl.create({
       header: 'Confirmar Eliminación',
-      message: `¿Estás seguro de que quieres eliminar a ${user.nombres} ${user.apellidos}?`,
+      message: `¿Estás seguro de que quieres eliminar a ${user.nombres} ${user.apellidos}? Esta acción es irreversible.`,
       buttons: [
         {
           text: 'Cancelar',
@@ -107,69 +128,52 @@ export class Tab3Page {
         },
         {
           text: 'Eliminar',
-          handler: () => {
-            this.deleteUser(user.id);
-          }
-        }
-      ]
+          handler: async () => {
+            // Asume que user.id existe para la eliminación
+            if (user.id !== undefined && user.id !== null) {
+              await this.deleteUser(user.id);
+            } else {
+              this.presentToast('Error: ID de usuario no disponible para eliminar.', 'danger');
+            }
+          },
+        },
+      ],
     });
+
     await alert.present();
   }
 
-  async deleteUser(userId: number) {
+  async deleteUser(userId: number) { // Método para eliminar usuario (llamado desde confirmDelete)
     try {
-      const result = await (window as any).electronAPI.deleteUser(userId);
+      const result = await (window as any).electronAPI.deleteUsuario(userId);
       if (result.success) {
-        const toast = await this.toastCtrl.create({
-          message: 'Usuario eliminado exitosamente',
-          duration: 3000,
-          color: 'success'
-        });
-        await toast.present();
-        this.loadUsers(); // Vuelve a cargar los libros actualizados
+        this.presentToast(result.message, 'success');
+        this.loadUsers(); // Recargar usuarios después de eliminar
       } else {
-        const toast = await this.toastCtrl.create({
-          message: 'Error al eliminar el usuario',
-          duration: 2000,
-          color: 'danger'
-        });
-        await toast.present();
+        this.presentToast('Error al eliminar usuario: ' + result.message, 'danger');
+        console.error('❌ Error en Electron API al eliminar usuario:', result.error);
       }
-    } catch (err) {
-      console.error('❌ Error al eliminar el usuario:', err);
+    } catch (error) {
+      this.presentToast('Error de comunicación al eliminar usuario.', 'danger');
+      console.error('❌ Error de comunicación al eliminar usuario:', error);
     }
   }
 
-  filterUsers() {
-          const searchTerm = this.searchTerm.toLowerCase();
-
-          if (searchTerm.trim() === '') {
-            this.filteredUsers = this.users;
-          } else {
-            this.filteredUsers = this.users.filter(user => {
-              return (
-                user.nombres.toLowerCase().includes(searchTerm) ||
-                user.apellidos.toLowerCase().includes(searchTerm) ||
-                user.cedula.toLowerCase().includes(searchTerm) ||
-                user.profesion.toLowerCase().includes(searchTerm) ||
-                user.lugarTrabajo.toLowerCase().includes(searchTerm) ||
-                user.direccion.toLowerCase().includes(searchTerm) ||
-                user.canton.toLowerCase().includes(searchTerm) ||
-                user.celular.toLowerCase().includes(searchTerm) ||
-                user.correo.toLowerCase().includes(searchTerm) ||
-                this.getTipoUsuarioString(user.tipoUsuario).toLowerCase().includes(searchTerm)
-              );
-            });
-          }
+  async presentToast(message: string, color: string) {
+    const toast = await this.toastCtrl.create({
+      message: message,
+      duration: 3000,
+      color: color,
+    });
+    toast.present();
   }
 
-  getTipoUsuarioString(tipo: number): string {
-    switch (tipo) {
-      case 0: return 'Niño';
-      case 1: return 'Joven';
-      case 2: return 'Adulto';
-      case 3: return 'Adulto Mayor';
-      default: return 'Desconocido';
-    }
+  onScroll(event: CustomEvent) {
+    const scrollTop = event.detail.scrollTop;
+    this.showScrollToTop = scrollTop > 150;
+  }
+
+  scrollToTop() {
+    this.content.scrollToTop(300);
   }
 }

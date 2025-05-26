@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, ModalController, ToastController } from '@ionic/angular';
-import { SharedModule } from '../../shared.module'; // Importar SharedModule
+import { HeaderComponent } from '../../components/header/header.component'; // <-- ¡AÑADIDA ESTA LÍNEA!
+// ELIMINAR ESTA LÍNEA: import { SharedModule } from '../../shared.module'; // NO DEBE IMPORTARSE AQUÍ SI ES STANDALONE
 
 @Component({
   selector: 'app-historial-devoluciones',
@@ -11,7 +12,7 @@ import { SharedModule } from '../../shared.module'; // Importar SharedModule
   imports: [
     CommonModule,
     IonicModule,
-    SharedModule, // Reemplazado HeaderComponent por SharedModule
+    HeaderComponent, // <-- ¡AÑADIDA ESTA LÍNEA y reemplaza a SharedModule!
   ],
 })
 export class HistorialDevolucionesComponent implements OnInit {
@@ -30,7 +31,7 @@ export class HistorialDevolucionesComponent implements OnInit {
   async loadHistorialDevoluciones() {
     this.isProcessing = true;
     try {
-      this.historial = await window.electronAPI.getHistorialDevoluciones();
+      this.historial = await (window as any).electronAPI.getHistorialDevoluciones();
       if (this.historial.length === 0) {
         this.presentToast('No hay historial de devoluciones.', 'info');
       }

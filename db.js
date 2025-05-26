@@ -33,56 +33,59 @@ const db = new sqlite3.Database(dbPath, (err) => {
         fila TEXT,
         caja TEXT,
         ejemplares INTEGER,
-        prestados INTEGER DEFAULT 0 -- Importante: debe existir esta columna
+        prestados INTEGER DEFAULT 0
       )`,
-      `CREATE TABLE IF NOT EXISTS usuarios ( -- Esta es tu tabla de usuarios, no la de login
+      `CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombres TEXT,
         apellidos TEXT,
-        cedula TEXT UNIQUE NOT NULL,
+        cedula TEXT UNIQUE,
         profesion TEXT,
         lugarTrabajo TEXT,
-        tipoUsuario INTEGER, -- 0: Niño, 1: Joven, 2: Adulto, 3: Adulto Mayor
+        tipoUsuario TEXT,
         edad INTEGER,
         direccion TEXT,
         canton TEXT,
         celular TEXT,
         correo TEXT
       )`,
+      // ¡¡FALTA ESTO!! Añade la tabla de préstamos aquí
       `CREATE TABLE IF NOT EXISTS prestamos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuarioId INTEGER NOT NULL,
+        userId INTEGER NOT NULL,
         fechaPrestamo TEXT NOT NULL,
-        completado INTEGER DEFAULT 0, -- 0=activo, 1=completado
-        FOREIGN KEY (usuarioId) REFERENCES usuarios(id)
-      )`,
-      `CREATE TABLE IF NOT EXISTS prestamos_libros (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        prestamoId INTEGER NOT NULL,
-        libroId INTEGER NOT NULL,
-        FOREIGN KEY (prestamoId) REFERENCES prestamos(id),
-        FOREIGN KEY (libroId) REFERENCES books(id)
+        librosJson TEXT NOT NULL, -- Aquí es donde se guarda el JSON de los libros
+        fechaDevolucion TEXT,
+        FOREIGN KEY (userId) REFERENCES usuarios(id)
       )`,
       `CREATE TABLE IF NOT EXISTS historial_devoluciones (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         prestamoId INTEGER NOT NULL,
         libroId INTEGER NOT NULL,
+        usuarioId INTEGER NOT NULL,
         fechaDevolucion TEXT NOT NULL,
+        tituloLibro TEXT,
+        codigoLibro TEXT,
+        nombreUsuario TEXT,
+        apellidoUsuario TEXT,
         FOREIGN KEY (prestamoId) REFERENCES prestamos(id),
-        FOREIGN KEY (libroId) REFERENCES books(id)
+        FOREIGN KEY (libroId) REFERENCES books(id),
+        FOREIGN KEY (usuarioId) REFERENCES usuarios(id)
       )`
     ];
 
-    // Ejecuta la creación de tablas
-    createTables.forEach((sql) => {
+    // Ejecuta la creación de todas las tablas
+    createTables.forEach(sql => {
       db.run(sql, (err) => {
         if (err) {
           console.error('❌ Error al crear tabla:', err.message);
+        } else {
+          console.log('✅ Tabla creada o ya existente: ', sql.substring(0, 50) + '...'); // Descomentar y modificar para depuración
         }
       });
     });
 
-    // Verificar si la columna 'prestados' ya existe en la tabla 'books' y añadirla si no
+    // Código existente para verificar y añadir columna 'prestados' a 'books'
     db.all("PRAGMA table_info(books)", (err, columns) => {
       if (err) {
         console.error('❌ Error al obtener información de la tabla books:', err);

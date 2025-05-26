@@ -1,122 +1,271 @@
 /* tab1.page.scss */
 
 ion-content {
-  --background: #f2f5f7;
+  --background: #f8f9fa; /* Un fondo muy claro y limpio */
   display: flex;
-  justify-content: center;
-  align-items: center;
   flex-direction: column;
+  align-items: center;
+  padding-top: 25px; /* Más espacio arriba */
+  padding-bottom: 25px; /* Más espacio abajo */
 }
 
 ion-searchbar {
-  flex: 1;
-  --background: white;
-  --color: #071e3d;
-  --placeholder-color: #071e3d;
-  margin: 10px;
+  --background: #ffffff;
+  --color: #333333; /* Color de texto más oscuro para mayor contraste */
+  --placeholder-color: #999999; /* Gris suave para el placeholder */
+  --border-radius: 25px; /* Muy redondeado, estilo píldora */
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra más definida */
+  margin: 15px 0; /* Más margen vertical */
+  width: 90%; /* Un poco más ancho */
+  max-width: 600px; /* Ancho máximo para no estirarse demasiado en pantallas grandes */
 }
 
 .table {
   width: 90%;
-  margin-bottom: 20px; /* Espacio debajo de la tabla */
+  max-width: 1200px; /* Ancho máximo para la tabla */
+  margin-top: 25px; /* Espacio superior para separar de la barra de búsqueda */
+  margin-bottom: 30px;
+  background-color: #ffffff; /* Fondo blanco para toda la tabla */
+  border-radius: 10px; /* Bordes redondeados */
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1); /* Sombra elegante */
+  overflow: hidden; /* Para que los bordes redondeados corten el contenido */
 }
 
 .options {
-  padding-top: 40px;
-  padding-bottom: 5px;
-  width: 80%;
+  padding-top: 20px;
+  padding-bottom: 15px;
+  width: 90%; /* Ajustado al ancho de la tabla */
+  max-width: 1200px;
   display: flex;
-  gap: 20px;
-  justify-content: left;
+  gap: 15px;
+  justify-content: center; /* Centrar los botones */
   align-items: center;
-  margin: 0 auto;
 }
 
-/* MEDIA QUERY para pantallas más pequeñas (ej. móviles) */
-@media (max-width: 768px) {
-  .options {
-    flex-direction: column; /* Apila los botones verticalmente */
-    width: 90%; /* Ocupa más ancho en pantallas pequeñas */
-    gap: 10px; /* Reduce el espacio entre botones */
-  }
-
-  .options ion-searchbar {
-    width: 100%; /* La barra de búsqueda ocupa todo el ancho */
-    margin: 0; /* Elimina márgenes extra */
-  }
-
-  .options ion-button {
-    width: 100%; /* Los botones ocupan todo el ancho */
-  }
-
-  .table {
-    width: 95%; /* La tabla ocupa más ancho en pantallas pequeñas */
-    margin-top: 20px; /* Espacio superior para separar de los botones */
-  }
-
-  .header-row {
-    display: none; /* Oculta la fila de encabezado en móviles para optimizar espacio */
-  }
-
-  ion-row.rows {
-    flex-direction: column; /* Apila las columnas de cada fila en móvil */
-    align-items: flex-start; /* Alinea el contenido al inicio */
-    padding: 10px;
-    margin-top: 10px; /* Espacio entre filas */
-    margin-bottom: 10px;
-  }
-
-  ion-col {
-    width: 100%; /* Cada columna ocupa el ancho completo */
-    padding-bottom: 5px; /* Espacio entre los datos apilados */
-    border-bottom: 1px dashed #eee; /* Separador sutil entre datos de la misma fila */
-  }
-
-  ion-col.first {
-    padding-left: 0; /* Elimina padding extra si se apila */
-  }
-
-  // Estilo para los títulos de las columnas cuando están apiladas (opcional)
-  ion-col::before {
-    content: attr(data-label); /* Usa el atributo data-label como pseudo-elemento */
-    font-weight: bold;
-    display: block;
-    margin-bottom: 5px;
-    color: var(--ion-color-tertiary); // Color para las etiquetas
-  }
+/* Estilos para los botones dentro de .options */
+.options ion-button {
+  --background: var(--ion-color-tertiary);
+  --background-activated: var(--ion-color-tertiary-shade);
+  --color: white;
+  --border-radius: 20px;
+  height: 44px; /* Altura agradable para un buen toque */
+  font-size: 1em; /* Tamaño de fuente ligeramente más grande */
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  flex-shrink: 0; /* Evita que se encojan en pantallas pequeñas si no es necesario */
 }
 
+.options ion-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.options ion-button[color="secondary"] {
+  --background: var(--ion-color-secondary);
+  --background-activated: var(--ion-color-secondary-shade);
+}
+
+/* Encabezado de la tabla */
 .header-row {
   text-align: start;
   background-color: var(--ion-color-tertiary);
-  padding: 8px 0;
+  padding: 15px 20px; /* Más padding para mayor altura */
   color: white;
-  border-radius: 8px;
-  font-weight: bold;
+  font-weight: 700; /* Más negrita */
+  font-size: 1.05em; /* Tamaño de fuente un poco más grande */
   position: sticky;
-  top: 5px;
+  top: 0px;
   z-index: 10;
-  background-color: var(--ion-color-tertiary);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Sombra ligera en el encabezado */
+}
+
+.header-row ion-col {
+  padding: 0 10px;
+  font-size: 1.05em; /* Asegura el tamaño de fuente en las columnas */
 }
 
 .first {
   padding-left: 20px;
-  padding-right: -20px;
 }
 
+/* Filas de datos */
 ion-row {
-  border-bottom: 1px solid #ddd;
-  padding: 8px 0;
+  border-bottom: 1px solid #eeeeee; /* Línea divisoria suave */
+  padding: 12px 0; /* Más padding vertical para mejor espaciado */
+  color: #333333; /* Color de texto oscuro */
+  transition: background-color 0.2s ease-in-out;
+}
+
+ion-row:last-child {
+  border-bottom: none; /* Elimina el borde de la última fila */
 }
 
 .rows {
-  background-color: white;
-  margin-top: 16px;
-  margin-bottom: 16px;
-  border-radius: 8px;
-  color: #000000;
+  background-color: transparent; /* Permite que el fondo de la tabla se vea */
+  margin: 0; /* Elimina márgenes de las filas si la tabla ya tiene padding */
+  border-radius: 0; /* No redondeado individualmente si la tabla ya lo es */
+  box-shadow: none; /* Elimina sombras individuales para las filas */
 }
 
 .rows ion-col {
-  color: #000000;
+  color: #333333;
+  padding: 0 10px;
+  font-size: 0.95em; /* Tamaño de fuente un poco más grande para los datos */
+  display: flex;
+  align-items: center;
+}
+
+.rows:hover {
+  background-color: #f0f4f7; /* Un gris azulado muy suave al pasar el ratón */
+}
+
+/* Estilos para los botones de acción dentro de las filas */
+.rows ion-button {
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  --border-radius: 18px; /* Redondeado, pero no píldora completa */
+  height: 38px; /* Altura cómoda */
+  font-size: 0.85em; /* Tamaño de texto legible */
+  margin-right: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.rows ion-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.rows ion-button[color="primary"] {
+  --background: var(--ion-color-primary);
+  --background-activated: var(--ion-color-primary-shade);
+}
+
+.rows ion-button[color="danger"] {
+  --background: var(--ion-color-danger);
+  --background-activated: var(--ion-color-danger-shade);
+}
+
+/* Estilo para la lista de libros prestados dentro de la celda */
+ion-list {
+  background: transparent !important;
+  padding: 0;
+  margin: 0;
+}
+
+ion-item {
+  --background: transparent !important;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  --min-height: 28px; /* Más altura para cada libro */
+  font-size: 0.9em; /* Tamaño de fuente agradable para los libros */
+  color: #555555; /* Un gris medio para los libros */
+  --border-width: 0; /* Eliminar bordes de los items */
+}
+
+/* Estilo para cuando no hay préstamos */
+.no-prestamos-message {
+  text-align: center;
+  color: #777777;
+  font-size: 1.2em; /* Mensaje más prominente */
+  margin-top: 60px;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  width: 90%;
+  max-width: 450px;
+}
+
+/* MEDIA QUERY para pantallas más pequeñas (ej. móviles) */
+@media (max-width: 768px) {
+  ion-content {
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+
+  ion-searchbar {
+    width: 95%;
+    --border-radius: 20px;
+    margin: 10px 0;
+  }
+
+  .options {
+    flex-direction: column;
+    width: 95%;
+    gap: 10px;
+    padding-top: 15px;
+    padding-bottom: 10px;
+  }
+
+  .options ion-button {
+    width: 100%;
+    height: 48px; /* Altura un poco mayor en móvil para facilidad de toque */
+    font-size: 1.05em; /* Texto más grande para móvil */
+    --border-radius: 18px;
+  }
+
+  .table {
+    width: 95%;
+    margin-top: 15px;
+    border-radius: 8px;
+  }
+
+  .header-row {
+    display: none;
+  }
+
+  ion-row.rows {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 15px; /* Más padding para cada "tarjeta" de fila */
+    margin-top: 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08); /* Sombra más notable para cada tarjeta */
+    background-color: white;
+  }
+
+  ion-col {
+    width: 100%;
+    padding-bottom: 10px; /* Más espacio entre los datos apilados */
+    border-bottom: 1px solid #f2f2f2; /* Separador más notorio */
+    font-size: 1em; /* Asegura un buen tamaño para los datos en móvil */
+  }
+
+  ion-col:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  ion-col::before {
+    font-weight: 700;
+    display: block;
+    margin-bottom: 5px;
+    color: var(--ion-color-medium);
+    font-size: 0.9em; /* Etiqueta un poco más grande */
+  }
+
+  .rows ion-button {
+    --padding-start: 10px;
+    --padding-end: 10px;
+    height: 40px; /* Botones un poco más grandes */
+    font-size: 0.9em; /* Texto de botón más grande en móvil */
+    margin-right: 10px;
+  }
+
+  ion-item {
+    --min-height: 32px; /* Más altura para items de libros en móvil */
+    font-size: 0.95em; /* Tamaño de fuente de libros en móvil */
+  }
+
+  .no-prestamos-message {
+    font-size: 1.1em;
+    padding: 25px;
+    margin-top: 40px;
+  }
 }

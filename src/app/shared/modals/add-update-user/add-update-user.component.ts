@@ -1,159 +1,105 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common'; // <-- ¡AÑADIDO!
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; // <-- ¡AÑADIDOS!
-import { IonicModule, ToastController } from '@ionic/angular'; // <-- ¡AÑADIDOS!
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { IonicModule, ToastController, ModalController } from '@ionic/angular'; // Asegúrate de importar ModalController
 import { User } from 'src/app/models/user.model';
-import { SharedModule } from '../../shared.module'; // <-- ¡AÑADIDO!
+import { HeaderComponent } from '../../components/header/header.component';
 
 @Component({
   selector: 'app-add-update-user',
   templateUrl: './add-update-user.component.html',
   styleUrls: ['./add-update-user.component.scss'],
-  standalone: true, // <-- ¡CAMBIADO A TRUE!
-  imports: [ // <-- ¡SECCIÓN AÑADIDA!
+  standalone: true,
+  imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     IonicModule,
-    SharedModule // <-- ¡AÑADIDO!
+    HeaderComponent
   ]
 })
 export class AddUpdateUserComponent implements OnInit {
 
-  @Input() user: User
+  @Input() user: User | undefined; // Puede ser User o undefined
 
-  fb = inject(FormBuilder)
-  toastCtrl = inject(ToastController)
+  fb = inject(FormBuilder);
+  toastCtrl = inject(ToastController);
+  modalCtrl = inject(ModalController); // Inyecta ModalController
 
   userForm: FormGroup;
-  title = ''
+  title = '';
   isProcessing = false;
-  
 
   constructor() {
     this.userForm = this.fb.group({
       nombres: ['', [Validators.required]],
       apellidos: ['', [Validators.required]],
       cedula: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
-      profesion: ['', []],
-      lugarTrabajo: ['', []],
-      tipoUsuario: [, [Validators.required]],
-      edad: [, [Validators.required, Validators.min(1)]],
-      direccion: ['', [Validators.required]],
-      canton: ['', [Validators.required]],
-      celular: ['', [Validators.minLength(10), Validators.maxLength(10)]],
-      correo: ['', [Validators.required, Validators.email]],
+      profesion: [''],
+      lugarTrabajo: [''],
+      tipoUsuario: [0, [Validators.required]], // Valor por defecto
+      edad: [null, [Validators.required, Validators.min(0), Validators.max(120)]],
+      direccion: [''],
+      canton: [''],
+      celular: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
+      correo: ['', [Validators.required, Validators.email]]
     });
   }
 
   ngOnInit() {
     if (this.user) {
-      this.userForm.patchValue({
-        nombres: this.user.nombres,
-        apellidos: this.user.apellidos,
-        cedula: this.user.cedula,
-        profesion: this.user.profesion || '',
-        lugarTrabajo: this.user.lugarTrabajo || '',
-        tipoUsuario: this.user.tipoUsuario,
-        edad: this.user.edad,
-        direccion: this.user.direccion,
-        canton: this.user.canton,
-        celular: this.user.celular || '',
-        correo: this.user.correo,
-      });
-      this.title = 'Editar usuario';
+      this.title = 'Editar Usuario';
+      this.userForm.patchValue(this.user);
     } else {
-      this.title = 'Agregar usuario';
+      this.title = 'Agregar Usuario';
     }
   }
 
-  async onSubmit() {
-    if (this.userForm.valid) {
-      if (this.isProcessing) return;
-      this.isProcessing = true;
-      const formData = this.userForm.value;
-      let userData: User;
-      userData = {
-        nombres: formData.nombres,
-        apellidos: formData.apellidos,
-        cedula: formData.cedula,
-        profesion: formData.profesion || '',
-        lugarTrabajo: formData.lugarTrabajo || '',
-        tipoUsuario: formData.tipoUsuario,
-        edad: formData.edad,
-        direccion: formData.direccion,
-        canton: formData.canton,
-        celular: formData.celular || '',
-        correo: formData.correo,
-      };
-      if (this.user) {
-        userData.id = this.user.id;
-        await this.editUser(userData);
-      }
-      else {
-        await this.addUser(userData);
-      }
-    } else {
-      console.log('Formulario inválido');
+  async saveUser() {
+    if (this.userForm.invalid) {
+      this.presentToast('Por favor, completa todos los campos requeridos y asegúrate de que sean válidos.', 'warning');
+      return;
     }
-    this.isProcessing = false;
-  }
 
-  async addUser(user: User) {
-    try {
-          const response = await window.electronAPI.insertUser(user);
-          if (response.success) {
-            const toast = await this.toastCtrl.create({
-              message: 'Usuario agregado exitosamente',
-              duration: 3000,
-              color: 'success'
-            });
-            await toast.present();
-          } else {
-            const toast = await this.toastCtrl.create({
-              message: 'Error al agregar el usuario',
-              duration: 2000,
-              color: 'danger'
-            });
-            await toast.present();        
-          }
-        } catch (err) {
-          console.error('Error al agregar el usuario:', err);
-          const toast = await this.toastCtrl.create({
-            message: 'Error de conexión',
-            duration: 2000,
-            color: 'danger'
-          });
-          await toast.present();
-        }
-  }
+    this.isProcessing = true;
+    const userData = this.userForm.value;
 
-  async editUser(user: any) {
     try {
-      const result = await window.electronAPI.updateUser(user);
-      if (result.success) {
-        const toast = await this.toastCtrl.create({
-          message: 'Usuario actualizado exitosamente',
-          duration: 3000,
-          color: 'success'
-        });
-        await toast.present();
+      let result;
+      if (this.user && this.user.id) {
+        // Modo edición: llamar a la función de actualización
+        userData.id = this.user.id; // Asegúrate de pasar el ID para la actualización
+        result = await (window as any).electronAPI.updateUsuario(userData);
       } else {
-        const toast = await this.toastCtrl.create({
-          message: 'Error al actualizar el usuario',
-          duration: 2000,
-          color: 'danger'
-        });
-        await toast.present();
+        // Modo creación: llamar a la función de inserción
+        result = await (window as any).electronAPI.insertUsuario(userData);
       }
-    } catch (err) {
-      const toast = await this.toastCtrl.create({
-        message: 'Error de conexión',
-        duration: 2000,
-        color: 'danger'
-      });
-      await toast.present();
+
+      if (result.success) {
+        this.presentToast(result.message, 'success');
+        this.modalCtrl.dismiss(true); // Cerrar modal y pasar 'true' para indicar éxito
+      } else {
+        this.presentToast('Error al procesar el usuario: ' + result.message, 'danger');
+        console.error('❌ Error al procesar usuario:', result.error);
+      }
+    } catch (error) {
+      this.presentToast('Error de comunicación con Electron al guardar usuario.', 'danger');
+      console.error('❌ Error en Electron API al guardar usuario:', error);
+    } finally {
+      this.isProcessing = false;
     }
   }
 
+  async presentToast(message: string, color: string) {
+    const toast = await this.toastCtrl.create({
+      message: message,
+      duration: 3000,
+      color: color,
+    });
+    toast.present();
+  }
+
+  cancel() {
+    this.modalCtrl.dismiss();
+  }
 }

@@ -5,7 +5,8 @@ import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 import { User } from '../../../models/user.model';
 import { Book } from '../../../models/book.model';
 import { Prestamo } from '../../../models/prestamo.model';
-import { SharedModule } from '../../shared.module'; // Importa tu SharedModule para app-header
+import { HeaderComponent } from '../../components/header/header.component'; // <-- ¡AÑADIDA ESTA LÍNEA!
+// ELIMINAR ESTA LÍNEA: import { SharedModule } from '../../shared.module'; // NO DEBE IMPORTARSE AQUÍ SI ES STANDALONE
 
 // Definimos la interfaz PrestamoLibro para claridad, asumiendo estas son las propiedades que llegan con el prestamo
 interface PrestamoLibro {
@@ -24,17 +25,18 @@ interface PrestamoLibro {
     FormsModule,
     IonicModule,
     ReactiveFormsModule,
-    SharedModule // <-- Importante: si app-header está en SharedModule
+    HeaderComponent // <-- ¡AÑADIDA ESTA LÍNEA y reemplaza a SharedModule!
   ],
 })
 export class AddUpdatePrestamoComponent implements OnInit {
   @Input() prestamo: Prestamo | null = null; // Puede ser un préstamo existente o nulo
-  
+
   title: string = 'Registrar Nuevo Préstamo';
   prestamoForm!: FormGroup;
   users: User[] = [];
-  books: Book[] = []; // Todos los libros disponibles (Book[] tiene todas las propiedades)
-  selectedBooks: Book[] = []; // Libros seleccionados para el préstamo (Book[] tiene todas las propiedades)
+  usuarios: User[] = [];
+  books: Book[] = [];
+  selectedBooks: Book[] = [];
   isProcessing: boolean = false;
   currentDate: string = new Date().toISOString();
 
@@ -48,9 +50,7 @@ export class AddUpdatePrestamoComponent implements OnInit {
 
   ngOnInit() {
     this.loadUsers();
-    this.loadBooks(); // Asegúrate de cargar todos los libros al inicio
-    // La llamada a patchFormWithPrestamoData() se moverá dentro de loadBooks()
-    // para asegurar que this.books esté disponible.
+    this.loadBooks();
     if (this.prestamo) {
       this.title = 'Actualizar Préstamo';
     }
@@ -64,7 +64,6 @@ export class AddUpdatePrestamoComponent implements OnInit {
   }
 
   async patchFormWithPrestamoData() {
-    // Asegúrate de que this.books ya esté poblado antes de llamar a esto
     if (this.prestamo && this.books.length > 0) {
       this.prestamoForm.patchValue({
         usuarioId: this.prestamo.usuarioId,
@@ -72,36 +71,34 @@ export class AddUpdatePrestamoComponent implements OnInit {
       });
 
       if (this.prestamo.libros) {
-        // Mapea los PrestamoLibro a Book completos usando la lista 'books' cargada
         this.selectedBooks = this.prestamo.libros
-          .map((prestamoLibro: PrestamoLibro) => 
+          .map((prestamoLibro: PrestamoLibro) =>
             this.books.find(book => book.id === prestamoLibro.id)
           )
-          .filter((book): book is Book => book !== undefined); // Filtra los undefined
+          .filter((book): book is Book => book !== undefined);
       }
     }
   }
 
   async loadUsers() {
     try {
-      const result = await window.electronAPI.getUsers();
+      const result = await (window as any).electronAPI.getUsuarios();
       if (result.success) {
-        this.users = result.data;
+        this.usuarios = result.users;
+        console.log('✅ Usuarios cargados desde Electron:', this.usuarios);
       } else {
-        this.presentToast('Error al cargar usuarios: ' + result.message, 'danger');
+        console.error('❌ Error cargando usuarios desde Electron (success: false):', result.message);
       }
     } catch (error) {
       console.error('❌ Error cargando usuarios desde Electron:', error);
-      this.presentToast('Error de comunicación al cargar usuarios.', 'danger');
     }
   }
 
   async loadBooks() {
     try {
-      const result = await window.electronAPI.getBooks();
+      const result = await (window as any).electronAPI.getBooks();
       if (result.success) {
         this.books = result.data;
-        // Una vez que los libros están cargados, parchea el formulario si estamos en modo edición
         if (this.prestamo) {
           this.patchFormWithPrestamoData();
         }
@@ -129,7 +126,6 @@ export class AddUpdatePrestamoComponent implements OnInit {
         this.presentToast('Solo se pueden prestar un máximo de 3 libros.', 'warning');
       }
     }
-    // Para resetear el ion-select después de la selección
     event.target.value = undefined;
   }
 
@@ -145,21 +141,20 @@ export class AddUpdatePrestamoComponent implements OnInit {
 
     this.isProcessing = true;
     const formValue = this.prestamoForm.value;
-    const libroIds = this.selectedBooks.map(book => book.id);
+    const libroIds = this.selectedBooks.map(book => book.id); // Esta línea ya no es necesaria si pasas el objeto completo
 
     const prestamoData = {
-      usuarioId: formValue.usuarioId,
-      libroIds: libroIds,
+      userId: formValue.usuarioId,
+      libros: this.selectedBooks.map(book => ({ id: book.id, titulo: book.titulo, codigo: book.codigo })),
       fechaPrestamo: formValue.fechaPrestamo
     };
 
     try {
       let result;
       if (this.prestamo && this.prestamo.id) {
-        // Asumiendo que existe una función 'updatePrestamo' en tu electronAPI
-        result = await window.electronAPI.updatePrestamo({ ...prestamoData, id: this.prestamo.id });
+        result = await (window as any).electronAPI.updatePrestamo({ ...prestamoData, id: this.prestamo.id });
       } else {
-        result = await window.electronAPI.insertPrestamo(prestamoData);
+        result = await (window as any).electronAPI.insertPrestamo(prestamoData);
       }
 
       if (result.success) {

@@ -9,11 +9,18 @@
 <ion-content [fullscreen]="true" class="ion-padding"> <div class="form-wrapper">
     <form class="prestamo-form" [formGroup]="prestamoForm" (ngSubmit)="confirmarPrestamo()">
 
-      <ion-item fill="outline" class="form-item-spacing"> <ion-label position="floating">Usuario</ion-label>
-        <ion-select placeholder="Selecciona un Usuario" formControlName="usuarioId" interface="popover" [interfaceOptions]="{cssClass: 'custom-select-popover'}" (ionChange)="onUsuarioSelected($event)">
-          <ion-select-option *ngFor="let user of users" [value]="user.id">{{ user.nombres }} {{ user.apellidos }} ({{ user.cedula }})</ion-select-option>
-        </ion-select>
-      </ion-item>
+      <ion-item fill="outline" class="form-item-spacing">
+  <ion-label position="floating">Usuario</ion-label>
+  <ion-select placeholder="Selecciona un Usuario"
+              formControlName="usuarioId"
+              interface="popover"
+              [interfaceOptions]="{cssClass: 'custom-select-popover'}"
+              (ionChange)="onUsuarioSelected($event)">
+    <ion-select-option *ngFor="let usuario of usuarios" [value]="usuario.id">
+      {{ usuario.nombres }} {{ usuario.apellidos }} ({{ usuario.cedula }})
+    </ion-select-option>
+  </ion-select>
+</ion-item>
       <ion-text color="danger" *ngIf="prestamoForm.get('usuarioId')?.touched && prestamoForm.get('usuarioId')?.errors?.['required']">
         <p class="error-message ion-padding-start">El usuario es requerido</p>
       </ion-text>

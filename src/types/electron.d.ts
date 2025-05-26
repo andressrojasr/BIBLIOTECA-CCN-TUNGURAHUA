@@ -1,33 +1,33 @@
 // src/types/electron.d.ts
+import { Book } from '../app/models/book.model'; // Asegúrate de que la ruta sea correcta
+import { User } from '../app/models/user.model'; // Asegúrate de que la ruta sea correcta
+import { Prestamo } from '../app/models/prestamo.model'; // Asegúrate de que la ruta sea correcta
 
+// Define la interfaz para los métodos de Electron API
 interface IElectronAPI {
-  // Métodos para Libros
-  insertBook: (libro: any) => Promise<any>;
   getBooks: () => Promise<any>;
-  updateBook: (book: any) => Promise<any>;
+  insertBook: (book: Book) => Promise<any>;
+  updateBook: (book: Book) => Promise<any>;
   deleteBook: (id: number) => Promise<any>;
 
-  // Métodos de Autenticación
-  login: (username: string, password: string) => Promise<any>;
+  getUsuarios: () => Promise<any>;
+  insertUsuario: (user: User) => Promise<any>;
+  updateUsuario: (user: User) => Promise<any>;
+  deleteUsuario: (id: number) => Promise<any>;
 
-  // Métodos para Usuarios
-  getUsers: () => Promise<any>;
-  insertUser: (user: any) => Promise<any>;
-  updateUser: (user: any) => Promise<any>;
-  deleteUser: (id: number) => Promise<any>;
-
-  // Métodos para Préstamos
-  insertPrestamo: (data: { usuarioId: number; libroIds: number[]; fechaPrestamo: string; }) => Promise<any>;
+  insertPrestamo: (data: { userId: number, libros: Book[] }) => Promise<any>;
   getPrestamos: () => Promise<any>;
-  devolverLibros: (data: { prestamoId: number; libroIds: number[] }) => Promise<any>;
+  devolverLibros: (data: { prestamoId: number, librosDevueltos: Book[] }) => Promise<any>;
   getHistorialDevoluciones: () => Promise<any>;
-  updatePrestamo: (data: { id: number; usuarioId: number; libroIds: number[]; fechaPrestamo: string; }) => Promise<any>; // <-- ¡AÑADE ESTA LÍNEA!
+  deletePrestamo: (id: number) => Promise<any>; // <--- ¡AÑADE ESTA LÍNEA!
+
+  login: (username: string, password: string) => Promise<any>;
 }
 
+// Declara la interfaz globalmente para que TypeScript la reconozca en `window`
+// Esta debe ser la ÚNICA declaración global de electronAPI
 declare global {
   interface Window {
     electronAPI: IElectronAPI;
   }
 }
-
-export {};

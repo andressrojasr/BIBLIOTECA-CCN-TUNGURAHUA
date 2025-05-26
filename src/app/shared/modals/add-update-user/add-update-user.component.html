@@ -1,7 +1,7 @@
 <app-header [title]="title" [isModal]="true"></app-header>
 <ion-content [fullscreen]="true">
     <div class="form-wrapper">
-        <form  class="login-form" [formGroup]="userForm" (ngSubmit)="onSubmit()">
+        <form class="login-form" [formGroup]="userForm" (ngSubmit)="saveUser()">
 
             <ion-item>
               <ion-input placeholder="Nombres (Requeridos)" fill="outline" formControlName="nombres">
@@ -106,15 +106,15 @@
                 <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
-            <ion-text color="danger" *ngIf="userForm.get('celular')?.touched && userForm.get('correo')?.errors?.['required']">
+            <ion-text color="danger" *ngIf="userForm.get('correo')?.touched && userForm.get('correo')?.errors?.['required']">
               <p class="ion-padding-start">El correo es requerido</p>
             </ion-text>
             <ion-text color="danger" *ngIf="userForm.get('correo')?.touched && userForm.get('correo')?.errors?.['email']">
               <p class="ion-padding-start">El correo no es valido</p>
             </ion-text>
 
-            <ion-button expand="block" type="submit" [disabled]="userForm.invalid || isProcessing" (click)="onSubmit()" color="tertiary">
-            {{user ? 'Actualizar Usuario' : 'Agregar Usuario'}}
+            <ion-button expand="block" type="submit" [disabled]="userForm.invalid || isProcessing" (click)="saveUser()" color="tertiary">
+              {{user ? 'Actualizar Usuario' : 'Agregar Usuario'}}
             </ion-button>
         </form>
     </div>

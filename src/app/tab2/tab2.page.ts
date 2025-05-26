@@ -1,5 +1,5 @@
-// tab2.page.ts
-import { Component, inject, ViewChild, OnInit } from '@angular/core';
+// src/app/tab2/tab2.page.ts
+import { Component, ViewChild, OnInit } from '@angular/core';
 import { AlertController, IonContent, ToastController } from '@ionic/angular';
 import { UtilsService } from '../services/utils.service';
 import { Book } from '../models/book.model';
@@ -11,11 +11,21 @@ import { AddUpdateBookComponent } from '../shared/modals/add-update-book/add-upd
   styleUrls: ['tab2.page.scss'],
   standalone: false,
 })
-export class Tab2Page {
+export class Tab2Page implements OnInit {
 
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
   constructor(private utils: UtilsService, private toastCtrl: ToastController, private alertCtrl: AlertController) {
+    // No llamar loadBooks aquí, lo haremos en ionViewWillEnter o ngOnInit
+  }
+
+  ngOnInit() {
+    // Se ejecuta una vez al inicializar el componente
+    this.loadBooks();
+  }
+
+  ionViewWillEnter() {
+    // Se ejecuta cada vez que la vista va a entrar en pantalla (al navegar a la pestaña)
     this.loadBooks();
   }
 
@@ -34,64 +44,64 @@ export class Tab2Page {
   filteredBooks: Book[] = [];
   searchTerm: string = '';
 
-  async editBook(book: Book) {
-    let success = await this.utils.presentModal({
-      component: AddUpdateBookComponent,
-      cssClass: 'add-update-modal',
-      componentProps: { book }
-    })
-    if (success) {
-      this.loadBooks();
-    };
-  }
-
-  async addBook() {
-    let success = await this.utils.presentModal({
-      component: AddUpdateBookComponent,
-      cssClass: 'add-update-modal',
-      componentProps: {}
-    })
-    if (success) {
-      this.loadBooks();
-      const toast = await this.toastCtrl.create({
-        message: 'Libro agregado con éxito',
-        duration: 3000,
-        color: 'success'
-      });
-      await toast.present();
-    };
-  }
-
-
   async loadBooks() {
     try {
-      const result = await window.electronAPI.getBooks();
-      console.log('Resultado de getBooks():', result);
+      const result = await window.electronAPI.getBooks(); // Usa la interfaz tipada
       if (result.success) {
-        // CAMBIA ESTA LÍNEA DE result.books A result.data
-        this.books = result.data || [];
-        this.filteredBooks = this.books;
+        this.books = result.data;
+        this.filterBooks();
       } else {
-        console.warn('No se encontraron libros.');
+        const toast = await this.toastCtrl.create({
+          message: result.message || 'Error al cargar los libros',
+          duration: 3000,
+          color: 'danger'
+        });
+        await toast.present();
       }
-    } catch (err) {
-      console.error('Error al obtener libros:', err);
+    } catch (error) {
+      console.error('Error al cargar los libros:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Error de conexión al cargar libros',
+        duration: 3000,
+        color: 'danger'
+      });
+      await toast.present();
+    }
+  }
+
+
+  async addBook() {
+    const { success } = await this.utils.presentModal({
+      component: AddUpdateBookComponent,
+      cssClass: 'modal-fullscreen', // <-- Corregido: cssClasses a cssClass
+      componentProps: {
+        // No pasamos un 'book' ya que es para agregar
+      }
+    });
+
+    if (success) {
+      this.loadBooks();
+    }
+  }
+
+  async editBook(book: Book) {
+    const { success } = await this.utils.presentModal({
+      component: AddUpdateBookComponent,
+      cssClass: 'modal-fullscreen', // <-- Corregido: cssClasses a cssClass
+      componentProps: {
+        book: book
+      }
+    });
+
+    if (success) {
+      this.loadBooks();
     }
   }
 
   async confirmDelete(book: Book) {
-    if (book.prestados > 0) {
-      const toast = await this.toastCtrl.create({
-        message: `No se puede eliminar el libro "${book.titulo}" porque tiene ejemplares prestados.`,
-        duration: 3000,
-        color: 'warning'
-      });
-      await toast.present();
-      return;
-    }
     const alert = await this.alertCtrl.create({
-      header: '¿Eliminar libro?',
-      message: `¿Estás seguro de eliminar el libro ${book.titulo} con código ${book.codigo}?`,
+      header: 'Confirmar Eliminación',
+      message: `¿Estás seguro de que quieres eliminar el libro "${book.titulo}"?`,
       buttons: [
         {
           text: 'Cancelar',
@@ -110,7 +120,7 @@ export class Tab2Page {
 
   async deleteBook(bookId: number) {
     try {
-      const result = await window.electronAPI.deleteBook(bookId);
+      const result = await window.electronAPI.deleteBook(bookId); // Usa la interfaz tipada
       if (result.success) {
         const toast = await this.toastCtrl.create({
           message: 'Libro Eliminado exitosamente',
@@ -121,7 +131,7 @@ export class Tab2Page {
         this.loadBooks();
       } else {
         const toast = await this.toastCtrl.create({
-          message: 'Error al eliminar el libro',
+          message: result.message || 'Error al eliminar el libro',
           duration: 2000,
           color: 'danger'
         });
@@ -129,6 +139,12 @@ export class Tab2Page {
       }
     } catch (err) {
       console.error('❌ Error al eliminar el libro:', err);
+      const toast = await this.toastCtrl.create({
+        message: 'Error de conexión al eliminar libro',
+        duration: 2000,
+        color: 'danger'
+      });
+      await toast.present();
     }
   }
 
@@ -140,12 +156,17 @@ export class Tab2Page {
     } else {
       this.filteredBooks = this.books.filter(book => {
         return (
-          book.titulo.toLowerCase().includes(searchTerm) ||
-          book.autor.toLowerCase().includes(searchTerm) ||
+          (book.titulo && book.titulo.toLowerCase().includes(searchTerm)) ||
+          (book.autor && book.autor.toLowerCase().includes(searchTerm)) ||
           (book.codigo && book.codigo.toLowerCase().includes(searchTerm)) ||
-          String(book.id).toLowerCase().includes(searchTerm)
+          (book.estanteria && book.estanteria.toLowerCase().includes(searchTerm)) ||
+          (book.fila && book.fila.toLowerCase().includes(searchTerm)) ||
+          (book.caja && book.caja.toLowerCase().includes(searchTerm))
         );
       });
     }
   }
 }
+
+// LA DECLARACIÓN GLOBAL SE MOVIO A src/types/electron.d.ts
+// REMUEVE CUALQUIER DECLARACIÓN SIMILAR DE ESTE ARCHIVO PARA EVITAR CONFLICTOS
