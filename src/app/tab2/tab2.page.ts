@@ -1,3 +1,4 @@
+// tab2.page.ts
 import { Component, inject, ViewChild, OnInit } from '@angular/core';
 import { AlertController, IonContent, ToastController } from '@ionic/angular';
 import { UtilsService } from '../services/utils.service';
@@ -10,7 +11,7 @@ import { AddUpdateBookComponent } from '../shared/modals/add-update-book/add-upd
   styleUrls: ['tab2.page.scss'],
   standalone: false,
 })
-export class Tab2Page{
+export class Tab2Page {
 
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
@@ -22,17 +23,16 @@ export class Tab2Page{
 
   onScroll(event: CustomEvent) {
     const scrollTop = event.detail.scrollTop;
-    this.showScrollToTop = scrollTop > 150; // muestra si se ha scrolleado más de 150px
+    this.showScrollToTop = scrollTop > 150;
   }
 
   scrollToTop() {
     this.content.scrollToTop(300);
   }
-  
+
   books: Book[] = [];
   filteredBooks: Book[] = [];
   searchTerm: string = '';
-
 
   async editBook(book: Book) {
     let success = await this.utils.presentModal({
@@ -44,12 +44,12 @@ export class Tab2Page{
       this.loadBooks();
     };
   }
-  
-  async addBook(){
+
+  async addBook() {
     let success = await this.utils.presentModal({
       component: AddUpdateBookComponent,
       cssClass: 'add-update-modal',
-      componentProps: {  }
+      componentProps: {}
     })
     if (success) {
       this.loadBooks();
@@ -66,9 +66,11 @@ export class Tab2Page{
   async loadBooks() {
     try {
       const result = await window.electronAPI.getBooks();
+      console.log('Resultado de getBooks():', result);
       if (result.success) {
-        this.books = result.books || [];
-        this.filteredBooks = this.books; // Inicializa filteredBooks con todos los libros
+        // CAMBIA ESTA LÍNEA DE result.books A result.data
+        this.books = result.data || [];
+        this.filteredBooks = this.books;
       } else {
         console.warn('No se encontraron libros.');
       }
@@ -79,13 +81,13 @@ export class Tab2Page{
 
   async confirmDelete(book: Book) {
     if (book.prestados > 0) {
-    const toast = await this.toastCtrl.create({
-      message: `No se puede eliminar el libro "${book.titulo}" porque tiene ejemplares prestados.`,
-      duration: 3000,
-      color: 'warning'
-    });
-    await toast.present();
-    return;
+      const toast = await this.toastCtrl.create({
+        message: `No se puede eliminar el libro "${book.titulo}" porque tiene ejemplares prestados.`,
+        duration: 3000,
+        color: 'warning'
+      });
+      await toast.present();
+      return;
     }
     const alert = await this.alertCtrl.create({
       header: '¿Eliminar libro?',
@@ -116,7 +118,7 @@ export class Tab2Page{
           color: 'success'
         });
         await toast.present();
-        this.loadBooks(); // Vuelve a cargar los libros actualizados
+        this.loadBooks();
       } else {
         const toast = await this.toastCtrl.create({
           message: 'Error al eliminar el libro',
@@ -131,19 +133,19 @@ export class Tab2Page{
   }
 
   filterBooks() {
-          const searchTerm = this.searchTerm.toLowerCase();
-      
-          if (searchTerm.trim() === '') {
-            this.filteredBooks = this.books;
-          } else {
-            this.filteredBooks = this.books.filter(book => {
-              return (
-                book.titulo.toLowerCase().includes(searchTerm) ||
-                book.autor.toLowerCase().includes(searchTerm) ||
-                (book.codigo && book.codigo.toLowerCase().includes(searchTerm)) ||
-                String(book.id).toLowerCase().includes(searchTerm)
-              );
-            });
-          }
+    const searchTerm = this.searchTerm.toLowerCase();
+
+    if (searchTerm.trim() === '') {
+      this.filteredBooks = this.books;
+    } else {
+      this.filteredBooks = this.books.filter(book => {
+        return (
+          book.titulo.toLowerCase().includes(searchTerm) ||
+          book.autor.toLowerCase().includes(searchTerm) ||
+          (book.codigo && book.codigo.toLowerCase().includes(searchTerm)) ||
+          String(book.id).toLowerCase().includes(searchTerm)
+        );
+      });
+    }
   }
 }
