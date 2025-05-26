@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Devolver Libros - Préstamo {{ prestamo?.id }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="closeModal()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-item>
+    <ion-label position="stacked">Usuario del Préstamo</ion-label>
+    <ion-input [value]="prestamo?.usuarioNombre + ' ' + prestamo?.usuarioApellido" readonly></ion-input>
+  </ion-item>
+
+  <ion-item class="ion-margin-top">
+    <ion-label position="stacked">Libros a Devolver</ion-label>
+    <ion-select
+      formControlName="libroIds"
+      placeholder="Selecciona los libros devueltos"
+      interface="popover"
+      [interfaceOptions]="{cssClass: 'custom-popover'}"
+      multiple="true"
+      (ionChange)="onBookSelectionChange($event)"
+      [formGroup]="devolucionForm"
+    >
+      <ion-select-option *ngFor="let libro of librosDisponiblesParaDevolucion" [value]="libro.id">
+        {{ libro.titulo }} ({{ libro.codigo }})
+      </ion-select-option>
+    </ion-select>
+  </ion-item>
+  <ion-text color="danger" *ngIf="devolucionForm.get('libroIds')?.touched && devolucionForm.get('libroIds')?.errors?.['required']">
+    <p class="error-message ion-padding-start">Debes seleccionar al menos un libro para devolver</p>
+  </ion-text>
+
+
+  <ion-button expand="block" class="ion-margin-top" (click)="confirmarDevolucion()" [disabled]="devolucionForm.invalid">
+    Confirmar Devolución
+  </ion-button>
+</ion-content>

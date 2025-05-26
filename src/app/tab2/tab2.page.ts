@@ -51,7 +51,15 @@ export class Tab2Page{
       cssClass: 'add-update-modal',
       componentProps: {  }
     })
-    if (success) 'Agregado con exito';
+    if (success) {
+      this.loadBooks();
+      const toast = await this.toastCtrl.create({
+        message: 'Libro agregado con éxito',
+        duration: 3000,
+        color: 'success'
+      });
+      await toast.present();
+    };
   }
 
 
@@ -81,7 +89,7 @@ export class Tab2Page{
     }
     const alert = await this.alertCtrl.create({
       header: '¿Eliminar libro?',
-      message: `¿Estás seguro de eliminar el libro ${book.titulo}?`,
+      message: `¿Estás seguro de eliminar el libro ${book.titulo} con código ${book.codigo}?`,
       buttons: [
         {
           text: 'Cancelar',
@@ -132,6 +140,7 @@ export class Tab2Page{
               return (
                 book.titulo.toLowerCase().includes(searchTerm) ||
                 book.autor.toLowerCase().includes(searchTerm) ||
+                (book.codigo && book.codigo.toLowerCase().includes(searchTerm)) ||
                 String(book.id).toLowerCase().includes(searchTerm)
               );
             });

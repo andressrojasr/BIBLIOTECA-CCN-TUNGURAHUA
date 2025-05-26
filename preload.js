@@ -1,3 +1,4 @@
+// preload.js
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -10,4 +11,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   insertUser: (user) => ipcRenderer.invoke('insertUser', user),
   updateUser: (user) => ipcRenderer.invoke('updateUser', user),
   deleteUser: (id) => ipcRenderer.invoke('deleteUser', id),
+  insertPrestamo: (data) => ipcRenderer.invoke('insertPrestamo', data),
+  getPrestamos: () => ipcRenderer.invoke('getPrestamos'),
+  devolverLibros: (data) => ipcRenderer.invoke('devolverLibros', data),
+  getHistorialDevoluciones: () => ipcRenderer.invoke('getHistorialDevoluciones'),
+  updatePrestamo: (data) => ipcRenderer.invoke('updatePrestamo', data), // <-- ¡AÑADE ESTA LÍNEA!
 });

@@ -1,0 +1,122 @@
+/* tab1.page.scss */
+
+ion-content {
+  --background: #f2f5f7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+ion-searchbar {
+  flex: 1;
+  --background: white;
+  --color: #071e3d;
+  --placeholder-color: #071e3d;
+  margin: 10px;
+}
+
+.table {
+  width: 90%;
+  margin-bottom: 20px; /* Espacio debajo de la tabla */
+}
+
+.options {
+  padding-top: 40px;
+  padding-bottom: 5px;
+  width: 80%;
+  display: flex;
+  gap: 20px;
+  justify-content: left;
+  align-items: center;
+  margin: 0 auto;
+}
+
+/* MEDIA QUERY para pantallas más pequeñas (ej. móviles) */
+@media (max-width: 768px) {
+  .options {
+    flex-direction: column; /* Apila los botones verticalmente */
+    width: 90%; /* Ocupa más ancho en pantallas pequeñas */
+    gap: 10px; /* Reduce el espacio entre botones */
+  }
+
+  .options ion-searchbar {
+    width: 100%; /* La barra de búsqueda ocupa todo el ancho */
+    margin: 0; /* Elimina márgenes extra */
+  }
+
+  .options ion-button {
+    width: 100%; /* Los botones ocupan todo el ancho */
+  }
+
+  .table {
+    width: 95%; /* La tabla ocupa más ancho en pantallas pequeñas */
+    margin-top: 20px; /* Espacio superior para separar de los botones */
+  }
+
+  .header-row {
+    display: none; /* Oculta la fila de encabezado en móviles para optimizar espacio */
+  }
+
+  ion-row.rows {
+    flex-direction: column; /* Apila las columnas de cada fila en móvil */
+    align-items: flex-start; /* Alinea el contenido al inicio */
+    padding: 10px;
+    margin-top: 10px; /* Espacio entre filas */
+    margin-bottom: 10px;
+  }
+
+  ion-col {
+    width: 100%; /* Cada columna ocupa el ancho completo */
+    padding-bottom: 5px; /* Espacio entre los datos apilados */
+    border-bottom: 1px dashed #eee; /* Separador sutil entre datos de la misma fila */
+  }
+
+  ion-col.first {
+    padding-left: 0; /* Elimina padding extra si se apila */
+  }
+
+  // Estilo para los títulos de las columnas cuando están apiladas (opcional)
+  ion-col::before {
+    content: attr(data-label); /* Usa el atributo data-label como pseudo-elemento */
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    color: var(--ion-color-tertiary); // Color para las etiquetas
+  }
+}
+
+.header-row {
+  text-align: start;
+  background-color: var(--ion-color-tertiary);
+  padding: 8px 0;
+  color: white;
+  border-radius: 8px;
+  font-weight: bold;
+  position: sticky;
+  top: 5px;
+  z-index: 10;
+  background-color: var(--ion-color-tertiary);
+}
+
+.first {
+  padding-left: 20px;
+  padding-right: -20px;
+}
+
+ion-row {
+  border-bottom: 1px solid #ddd;
+  padding: 8px 0;
+}
+
+.rows {
+  background-color: white;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  color: #000000;
+}
+
+.rows ion-col {
+  color: #000000;
+}

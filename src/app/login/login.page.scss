@@ -1,102 +1,167 @@
-.login-wrapper {
+/* login.page.scss */
+
+ion-content {
+  --background: #071e3d; /* Color de fondo oscuro para contrastar */
   display: flex;
-  flex-direction: row;
-  height: 100%;
-  align-items: center;
   justify-content: center;
-  padding: 16px;
-  @media (max-width: 768px) {
-    flex-direction: column;
-    text-align: center;
-  }
+  align-items: center;
+  /* Eliminado padding para que el .login-container controle el espaciado interno */
 }
 
-ion-content{
-    --background: #071e3d;
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  padding: 20px; /* Agregamos padding al contenedor principal para espacio en los bordes */
+  box-sizing: border-box; /* Incluye padding en el ancho/alto total */
+}
+
+.login-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada para el efecto de "tarjeta" */
+  padding: 40px 30px;
+  max-width: 450px; /* Ancho máximo para el formulario de login */
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center; /* Centra el contenido dentro de la tarjeta por defecto */
+  display: flex; /* Usamos flexbox para organizar mejor el contenido verticalmente */
+  flex-direction: column;
+  align-items: center; /* Centra los items hijos horizontalmente */
 }
 
 .logo-section {
-  flex: 1.5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.logo-img {
-  max-width: 400px;
-  height: auto;
-}
-
-.animate-logo {
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-
-.form-section {
-  flex: 1;
-  padding: 24px;
+  width: 100%; /* Ocupa el ancho completo de la tarjeta */
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  width: 100%;
+  align-items: center; /* Centra el logo y el h1 */
+  margin-bottom: 25px;
 }
 
-ion-item{
-    --background: #071e3d;
-    padding-bottom: 30px;
+.logo {
+  max-width: 150px; /* Tamaño del logo */
+  margin-bottom: 10px; /* Espacio entre el logo y el título */
+  animation: bounce 2s infinite ease-in-out; /* Animación de "salto" */
+}
+
+/* Animación de "salto" para el logo */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px); /* Salta 10px hacia arriba */
+  }
+}
+
+h1 {
+  color: #071e3d; /* Color del título "Iniciar Sesión" */
+  font-size: 2.2em;
+  font-weight: bold;
+  margin-bottom: 0; /* Ajuste para que la línea se vea mejor debajo */
+  position: relative;
+  display: inline-block; /* Para que la línea se ajuste al texto */
+}
+
+h1::after {
+  content: '';
+  display: block;
+  width: 60%; /* Ancho de la línea debajo del título */
+  height: 4px;
+  background-color: var(--ion-color-tertiary); /* Línea roja debajo del título */
+  margin: 8px auto 0;
+  border-radius: 2px;
+}
+
+ion-list {
+  background: transparent; /* Asegura que la lista no tenga un fondo extra */
+  padding: 0;
+  margin-bottom: 20px;
+  width: 100%; /* Asegura que la lista ocupe el ancho completo */
+}
+
+ion-item {
+  --background: white; /* Fondo blanco para el ítem */
+  padding-bottom: 10px; /* Espacio entre ítems */
+  --highlight-background: transparent; /* Quita el fondo de highlight al enfocar */
+  --border-radius: 8px; /* Bordes redondeados para inputs */
+  margin-bottom: 15px; /* Espacio entre los ion-item */
+}
+
+ion-label {
+  color: #071e3d; /* Color de la etiqueta flotante */
+  font-weight: 500;
 }
 
 ion-input {
-  --background: white;
+  --background: #f2f5f7; /* Un color de fondo ligero para el input en sí */
   --color: #071e3d;
   --placeholder-color: #071e3d;
   --placeholder-opacity: 0.8;
-
-  --padding-bottom: 10px;
+  --padding-start: 15px; /* Más padding para los iconos */
   --padding-end: 10px;
-  --padding-start: 10px;
-  --padding-top: 10px;
+  border-radius: 8px; /* Bordes redondeados para el input real */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06); /* Sombra interna para un efecto de profundidad */
+  caret-color: var(--ion-color-tertiary); /* Color del cursor */
 }
 
-.ion-padding-start{
-    margin-top:-25px;
-    font-size: 15px;
+ion-item.item-has-focus ion-input {
+  --background: #e6e6e6; /* Fondo del input cuando está enfocado */
+  border: 1px solid var(--ion-color-secondary); /* Borde secundario al enfocar */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 5px rgba(var(--ion-color-secondary-rgb), 0.3); /* Sombra suave al enfocar */
 }
 
-.login-form {
-    max-width: 450px;
+ion-icon[slot="start"] {
+  color: var(--ion-color-secondary); /* Iconos del color secundario */
+  font-size: 1.2em;
 }
 
-h2 {
-    font-size: 30px;
-    text-align: left;
-    margin-bottom: 30px;
-    margin-left: 15px;
-    font-weight: 600;
-    color: white;
-    position: relative;
-    &::before {
-    content: '';
-    position: absolute;
-    top: -10px; /* altura de la línea respecto al h2 */
-    left: 0;
-    width: 160px; /* largo de la línea */
-    height: 4px; /* grosor de la línea */
-    background-color: #b22222;
-    border-radius: 2px;
+ion-button[fill="clear"] {
+  color: var(--ion-color-tertiary); /* Color del icono de visibilidad de contraseña */
+  font-size: 1.2em;
+}
+
+/* Estilos para los mensajes de error */
+.error-message {
+  display: block; /* Asegura que el párrafo esté en su propia línea */
+  margin-top: -10px; /* Ajusta para que los mensajes de error estén más cerca del input */
+  margin-bottom: 15px; /* Espacio después del mensaje de error */
+  font-size: 0.9em;
+  color: var(--ion-color-danger); /* Color de error de Ionic */
+  text-align: left;
+  padding-left: 15px; /* Alineación con el input */
+  font-weight: 500; /* Un poco más de énfasis en el texto */
+}
+
+ion-button[type="submit"] {
+  --background: var(--ion-color-tertiary); /* Tu color principal de botón */
+  --background-activated: var(--ion-color-tertiary-shade); /* Un tono más oscuro al presionar */
+  --color: white; /* Color del texto del botón */
+  font-weight: bold;
+  height: 50px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  font-size: 1.1em;
+  box-shadow: 0 4px 10px rgba(var(--ion-color-tertiary-rgb), 0.3); /* Sombra para el botón */
+}
+
+ion-button[type="submit"][disabled] {
+  --background: #cccccc; /* Color para el botón deshabilitado */
+  --background-activated: #cccccc;
+  --color: #666666;
+  box-shadow: none; /* Sin sombra cuando está deshabilitado */
+}
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+  .login-card {
+    padding: 30px 20px;
+    margin: 15px;
+  }
+
+  h1 {
+    font-size: 1.8em;
   }
 }
-
-

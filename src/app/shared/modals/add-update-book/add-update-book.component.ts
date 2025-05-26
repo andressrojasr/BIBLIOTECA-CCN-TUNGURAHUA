@@ -1,14 +1,23 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToastController } from '@ionic/angular';
+import { CommonModule } from '@angular/common'; // <-- ¡AÑADIDO!
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; // <-- ¡AÑADIDOS!
+import { IonicModule, ToastController } from '@ionic/angular'; // <-- ¡AÑADIDOS!
 import { Book } from 'src/app/models/book.model';
+import { HeaderComponent } from '../../components/header/header.component';
 
 
 @Component({
   selector: 'app-add-update-book',
   templateUrl: './add-update-book.component.html',
   styleUrls: ['./add-update-book.component.scss'],
-  standalone: false,
+  standalone: true, // <-- ¡CAMBIADO A TRUE!
+  imports: [ // <-- ¡SECCIÓN AÑADIDA!
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    IonicModule,
+    HeaderComponent // <-- ¡AÑADIDO!
+  ]
 })
 export class AddUpdateBookComponent  implements OnInit {
 
@@ -24,6 +33,7 @@ export class AddUpdateBookComponent  implements OnInit {
 
   constructor() {
     this.bookForm = this.fb.group({
+      codigo: ['', [Validators.required]], // Campo código obligatorio
       titulo: ['', [Validators.required]],
       autor: ['', [Validators.required]],
       estanteria: ['', [Validators.min(1)]],
@@ -36,6 +46,7 @@ export class AddUpdateBookComponent  implements OnInit {
   ngOnInit() {
     if (this.book) {
       this.bookForm.patchValue({
+        codigo: this.book.codigo, // Incluir código existente
         titulo: this.book.titulo,
         autor: this.book.autor,
         estanteria: this.book.estanteria == '0' ? '' : this.book.estanteria,
@@ -55,17 +66,21 @@ export class AddUpdateBookComponent  implements OnInit {
       this.isProcessing = true;
       const formData = this.bookForm.value;
       let bookData: Book;
+      
       bookData = {
+        codigo: formData.codigo, // Usar el código del formulario
         titulo: formData.titulo,
         autor: formData.autor,
         estanteria: formData.estanteria || 0,
         fila: formData.fila || 0,
         caja: formData.caja || 0,
         ejemplares: formData.ejemplares,
-        prestados: 0,
+        prestados: 0
       };
+      
       if (this.book) {
         bookData.id = this.book.id;
+        bookData.prestados = this.book.prestados; // Mantener prestados existentes
         await this.editBook(bookData);
       }
       else {

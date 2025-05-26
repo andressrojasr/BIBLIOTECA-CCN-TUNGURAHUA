@@ -19,7 +19,7 @@
     </ion-row>
 
     <ion-row *ngFor="let book of filteredBooks" class="rows ion-align-items-center">
-      <ion-col size="1" class="first">{{ book.id }}</ion-col>
+      <ion-col size="1" class="first">{{ book.codigo }}</ion-col>
       <ion-col size="3">{{ book.titulo }}</ion-col>
       <ion-col size="2">{{ book.autor }}</ion-col>
       <ion-col size="3">Estante: {{ book.estanteria }}, Fila: {{book.fila}}, Caja: {{book.caja}}</ion-col>
@@ -40,4 +40,3 @@
     </ion-fab-button>
   </ion-fab>
 </ion-content>
-

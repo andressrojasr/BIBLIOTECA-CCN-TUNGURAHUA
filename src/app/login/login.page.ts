@@ -1,74 +1,103 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { IonicModule, ToastController } from '@ionic/angular';
+import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavController, ToastController } from '@ionic/angular';
+import { SharedModule } from '../shared/shared.module'; // Importa tu SharedModule
+
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
-  standalone: false,
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonicModule,
+    ReactiveFormsModule,
+    SharedModule, // LoginPage importa SharedModule directamente
+  ],
 })
 export class LoginPage implements OnInit {
-  loginForm: FormGroup;
-
-  fb = inject(FormBuilder)
-  navCtrl = inject(NavController)
-  toastCtrl = inject(ToastController)
-
-  showPassword: boolean = false;
+  loginForm!: FormGroup;
   type: string = 'password';
-  icon = 'eye-outline';
-  togglePasswordVisibility() {
-    this.showPassword = !this.showPassword;
-    if (this.showPassword) {
-      this.icon = 'eye-off-outline';
-      this.type = 'text';
-    } else {
-      this.icon = 'eye-outline';
-      this.type = 'password';
-    }
-  }
+  icon: string = 'eye';
 
-  constructor() {
-    this.loginForm = this.fb.group({
-      username: ['', [Validators.required, Validators.minLength(5)]],
-      password: ['', [Validators.required, Validators.minLength(5)]],
-    });
-   }
+  @ViewChild('usernameInput', { static: true }) usernameInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('passwordInput', { static: true }) passwordInput!: ElementRef<HTMLInputElement>;
+
+  constructor(
+    private router: Router,
+    private toastCtrl: ToastController,
+    private formBuilder: FormBuilder
+  ) {
+    this.initLoginForm();
+  }
 
   ngOnInit() {
+    this.clearInputFields();
   }
 
-  async onSubmit() {
-    if (this.loginForm.valid) {
-      const { username, password } = this.loginForm.value;
-       try {
-          const response = await window.electronAPI.login(username, password);
-          if (response.success) {
-            localStorage.setItem('user', JSON.stringify(response.user));
-            const toast = await this.toastCtrl.create({
-              message: 'Inicio de sesión exitoso',
-              duration: 2000,
-              color: 'success'
-            });
-            await toast.present();
-            this.navCtrl.navigateRoot(['/tabs'], {replaceUrl: true});
-          } else {
-            const toast = await this.toastCtrl.create({
-              message: 'Credenciales inválidas',
-              duration: 2000,
-              color: 'danger'
-            });
-            await toast.present();            
-          }
-        } catch (err) {
-          const toast = await this.toastCtrl.create({
-            message: 'Error de conexión',
-            duration: 2000,
-            color: 'danger'
-          });
-          await toast.present();
-        }
+  ionViewWillEnter() {
+    this.clearInputFields();
+  }
+
+  initLoginForm() {
+    this.loginForm = this.formBuilder.group({
+      username: ['', Validators.required],
+      password: ['', Validators.required],
+    });
+    this.type = 'password';
+    this.icon = 'eye';
+  }
+
+  clearInputFields() {
+    if (this.usernameInput && this.usernameInput.nativeElement) {
+      this.usernameInput.nativeElement.value = '';
     }
+    if (this.passwordInput && this.passwordInput.nativeElement) {
+      this.passwordInput.nativeElement.value = '';
+    }
+    this.loginForm.reset({ username: '', password: '' });
+  }
+
+  togglePasswordVisibility() {
+    this.type = this.type === 'password' ? 'text' : 'password';
+    this.icon = this.type === 'password' ? 'eye' : 'eye-off';
+  }
+
+  async login() {
+    if (this.loginForm.invalid) {
+      this.presentToast('Por favor, ingresa usuario y contraseña.', 'warning');
+      return;
+    }
+
+    const { username, password } = this.loginForm.value;
+
+    try {
+      const result = await window.electronAPI.login(username, password);
+
+      if (result.success) {
+        localStorage.setItem('user', JSON.stringify({ username: username, isLoggedIn: true }));
+        this.presentToast('Inicio de sesión exitoso', 'success');
+        this.router.navigate(['/tabs/tab1']);
+      } else {
+        this.presentToast('Usuario o contraseña incorrectos', 'danger');
+      }
+    } catch (error) {
+      console.error('Error durante el login:', error);
+      this.presentToast('Error al conectar con el servicio.', 'danger');
+    }
+  }
+
+  async presentToast(message: string, color: string) {
+    const toast = await this.toastCtrl.create({
+      message: message,
+      duration: 3000,
+      color: color,
+    });
+    toast.present();
   }
 }

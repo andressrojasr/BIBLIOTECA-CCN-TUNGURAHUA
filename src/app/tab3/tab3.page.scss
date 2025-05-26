@@ -14,7 +14,7 @@ ion-searchbar {
   margin: 10px;
 }
 .table{
-  width: 95%;
+  width: 90%;
 }
 
 .options{
@@ -52,7 +52,12 @@ ion-row {
 
 .rows {
   background-color: white;
-  margin-top: 16PX;
+  margin-top: 16px;
   margin-bottom: 16px;
   border-radius: 8px;
+  color: #000000; /* Color negro para el texto de la información de los libros */
+}
+
+.rows ion-col {
+  color: #000000; /* Asegura que todo el texto dentro de las columnas sea negro */
 }

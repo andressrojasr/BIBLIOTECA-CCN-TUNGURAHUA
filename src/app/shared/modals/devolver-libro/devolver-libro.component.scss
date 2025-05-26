@@ -1,0 +1,39 @@
+.modal-content {
+  padding: 20px;
+}
+
+ion-list {
+  background: var(--ion-background-color, #f2f5f7);
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+ion-list-header {
+  color: var(--ion-color-tertiary);
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+ion-item {
+  --background: white;
+  border-radius: 8px;
+  margin-bottom: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  --padding-start: 10px; // Ajusta el padding para la checkbox
+}
+
+ion-checkbox {
+  margin-right: 10px; // Espacio entre checkbox y label
+  --checkbox-background-checked: var(--ion-color-tertiary);
+}
+
+ion-label {
+  white-space: normal; // Permite que el texto de la etiqueta se envuelva
+}
+
+ion-button {
+  margin-top: 20px;
+  --box-shadow: none;
+}

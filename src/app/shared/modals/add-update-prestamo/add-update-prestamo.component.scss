@@ -1,0 +1,132 @@
+/* src/app/shared/modals/add-update-prestamo/add-update-prestamo.component.scss */
+
+ion-content {
+  --background: var(--ion-background-color, #f0f2f5); // Un fondo ligeramente grisáceo
+  color: var(--ion-color-step-850, #000); // Color de texto general oscuro
+}
+
+.form-wrapper {
+  padding: 16px; // Un poco de padding alrededor del formulario
+  background: white; // Fondo blanco para el contenedor del formulario
+  border-radius: 12px; // Bordes redondeados para el formulario
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); // Una sombra más pronunciada
+  margin-top: 20px; // Margen superior si el header lo permite
+}
+
+.prestamo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; // Espacio entre los ion-item y otros elementos del formulario
+}
+
+.form-item-spacing {
+  margin-bottom: 0; // Resetear el margen por defecto si ya lo tiene un item
+  border-radius: 8px; // Bordes redondeados para los items
+  overflow: hidden; // Asegura que los bordes redondeados se apliquen bien
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); // Sombra suave para cada item
+}
+
+ion-item {
+  --background: white; // Fondo blanco para el ion-item
+  --border-color: var(--ion-color-step-200, #ccc); // Color del borde al fondo
+  --highlight-color-focused: var(--ion-color-primary); // Color del borde al enfocar
+  --color: var(--ion-color-step-850, #000); // Color del texto de la etiqueta (label)
+  
+  // Estilo para cuando el item está con outline
+  &.item-fill-outline {
+    border: 1px solid var(--ion-color-step-200, #ccc); // Borde predeterminado
+    border-radius: 8px;
+    &.item-has-focus {
+      border-color: var(--ion-color-primary); // Borde azul al enfocar
+    }
+  }
+
+  // Estilo específico para ion-label y ion-select/input dentro de ion-item
+  ion-label[position="floating"] {
+    // Aumenta el padding-bottom para separar el label del input/select
+    // o puedes usar margin-bottom si el label está en un elemento separado
+    padding-bottom: 3px; // Puedes ajustar este valor
+    transform: translateY(-3px); // Un pequeño ajuste si el label flota muy cerca al principio
+  }
+
+  ion-select,
+  ion-input {
+    // Añade un poco de padding superior si el label está flotando, para separar del label
+    --padding-top: 10px; // Ajusta este valor para más separación
+    --color: var(--ion-color-step-850, #000); // Color del texto (negro)
+    --placeholder-color: var(--ion-color-step-500, #999); // Color del placeholder
+    --placeholder-opacity: 1;
+  }
+}
+
+
+// Estilos para el popover de las opciones de ion-select
+.custom-select-popover {
+  --background: white; // Fondo del popover blanco
+  --width: 90%; // Ajusta el ancho del popover si es necesario
+  --max-width: 400px;
+
+  .select-popover-md .popover-content {
+    --background: white;
+  }
+
+  ion-radio,
+  ion-checkbox {
+    --color: var(--ion-color-primary); // Color del radio/checkbox seleccionado
+    --color-checked: var(--ion-color-primary);
+  }
+
+  ion-label {
+    color: var(--ion-color-step-850, #000); // Color del texto de las opciones
+  }
+
+  ion-item {
+    --background: white; // Fondo de los ítems dentro del popover
+    --border-color: transparent; // Oculta los bordes internos si no los quieres
+    color: var(--ion-color-step-850, #000);
+  }
+}
+
+// Estilo para los libros seleccionados (los cuadritos)
+ion-list {
+  background: transparent; // Que la lista no tenga un fondo para no tapar el wrapper
+  padding: 0;
+  margin-top: 15px; // Espacio superior para la lista de libros seleccionados
+}
+
+ion-list-header {
+  --background: transparent; // Para que el header de la lista no tenga un fondo que tape
+  ion-label {
+    font-weight: 600;
+    color: var(--ion-color-step-850, #000);
+    padding-bottom: 5px; // Espacio debajo del título "Libros Seleccionados"
+  }
+}
+
+.selected-book-item {
+  // Aplicar estilos similares a los ion-item del formulario
+  --background: white; // Fondo blanco para cada libro seleccionado
+  --border-color: var(--ion-color-step-200, #ccc); // Borde suave
+  --color: var(--ion-color-step-850, #000); // Color del texto
+  
+  border: 1px solid var(--ion-color-step-200, #ccc); // Borde explícito
+  border-radius: 8px; // Bordes redondeados
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); // Sombra
+  margin-bottom: 8px; // Espacio entre cada libro seleccionado
+  padding-left: 10px; // Padding interno para el texto
+  padding-right: 10px; // Padding interno
+}
+
+.error-message {
+  font-size: 0.85em;
+  margin-top: -10px; // Acercar al input si es necesario
+  margin-bottom: 10px;
+}
+
+ion-button[type="submit"] {
+  margin-top: 20px;
+  --background: var(--ion-color-tertiary); // Color de fondo del botón
+  --color: white; // Color del texto del botón
+  border-radius: 8px; // Bordes redondeados para el botón
+  font-weight: 600;
+}

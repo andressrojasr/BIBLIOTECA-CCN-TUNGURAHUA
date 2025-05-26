@@ -1,13 +1,10 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
 import { IonicModule } from '@ionic/angular';
 
 import { LoginPageRoutingModule } from './login-routing.module';
-
-import { LoginPage } from './login.page';
-import { SharedModule } from '../shared/shared.module';
+// import { SharedModule } from '../shared/shared.module'; // <-- ¡ASEGÚRATE DE QUE ESTA LÍNEA ESTÉ COMENTADA O ELIMINADA!
 
 @NgModule({
   imports: [
@@ -15,8 +12,8 @@ import { SharedModule } from '../shared/shared.module';
     FormsModule,
     IonicModule,
     LoginPageRoutingModule,
-    SharedModule
+    // SharedModule // ¡ASEGÚRATE DE QUE ESTA LÍNEA TAMBIÉN ESTÉ COMENTADA O ELIMINADA!
   ],
-  declarations: [LoginPage]
+  declarations: [] // Correcto para un LoginPage standalone
 })
 export class LoginPageModule {}

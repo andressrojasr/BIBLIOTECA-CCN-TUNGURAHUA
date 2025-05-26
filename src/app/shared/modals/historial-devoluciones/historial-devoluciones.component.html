@@ -1,0 +1,23 @@
+<app-header title="Historial de Devoluciones" [isModal]="true"></app-header>
+<ion-content [fullscreen]="true">
+  <div class="modal-content">
+    <ion-list *ngIf="historial.length > 0">
+      <ion-list-header>
+        <ion-label>Devoluciones Registradas</ion-label>
+      </ion-list-header>
+      <ion-item *ngFor="let item of historial">
+        <ion-label>
+          <h2>{{ item.tituloLibro }} ({{ item.codigoLibro }})</h2>
+          <p>Devuelto por: {{ item.usuarioNombres }} {{ item.usuarioApellidos }}</p>
+          <p>Fecha de Devolución: {{ item.fechaDevolucion }}</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+    <div *ngIf="historial.length === 0 && !isProcessing" class="empty-state">
+      <ion-text color="medium">No hay devoluciones registradas.</ion-text>
+    </div>
+
+    <ion-spinner *ngIf="isProcessing"></ion-spinner>
+  </div>
+</ion-content>

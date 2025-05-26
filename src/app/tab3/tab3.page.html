@@ -21,7 +21,7 @@
       <ion-col size="1"><strong>Canton</strong></ion-col>
       <ion-col size="1"><strong>Celular</strong></ion-col>
       <ion-col size="1"><strong>Correo</strong></ion-col>
-    <ion-col size="1"><strong>Acciones</strong></ion-col>
+      <ion-col size="1"><strong>Acciones</strong></ion-col>
     </ion-row>
 
     <ion-row *ngFor="let user of filteredUsers" class="rows ion-align-items-center">
@@ -43,16 +43,14 @@
         <ion-button color="tertiary" shape="round" (click)="editUser(user)">
           <ion-icon name="create-outline"></ion-icon>
         </ion-button>
-        <ion-button color="primary" shape="round" (click)="confirmDelete(user)">
-          <ion-icon name="trash-outline"></ion-icon>
+        <ion-button color="primary" shape="round" (click)="confirmDeleteUser(user)"> <ion-icon name="trash-outline"></ion-icon>
         </ion-button>
       </ion-col>
     </ion-row>
   </ion-grid>
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="padding: 15px;" *ngIf="showScrollToTop">
-    <ion-fab-button color="secondary" (click)="scrollToTop()">
-      <ion-icon name="chevron-up-circle"></ion-icon>
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="showScrollToTop">
+    <ion-fab-button (click)="scrollToTop()" color="primary">
+      <ion-icon name="arrow-up"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 </ion-content>
-

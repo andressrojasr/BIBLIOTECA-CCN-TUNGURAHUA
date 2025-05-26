@@ -1,15 +1,24 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToastController } from '@ionic/angular';
+import { CommonModule } from '@angular/common'; // <-- ¡AÑADIDO!
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; // <-- ¡AÑADIDOS!
+import { IonicModule, ToastController } from '@ionic/angular'; // <-- ¡AÑADIDOS!
 import { User } from 'src/app/models/user.model';
+import { SharedModule } from '../../shared.module'; // <-- ¡AÑADIDO!
 
 @Component({
   selector: 'app-add-update-user',
   templateUrl: './add-update-user.component.html',
   styleUrls: ['./add-update-user.component.scss'],
-  standalone: false,
+  standalone: true, // <-- ¡CAMBIADO A TRUE!
+  imports: [ // <-- ¡SECCIÓN AÑADIDA!
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    IonicModule,
+    SharedModule // <-- ¡AÑADIDO!
+  ]
 })
-export class AddUpdateUserComponent  implements OnInit {
+export class AddUpdateUserComponent implements OnInit {
 
   @Input() user: User
 
@@ -106,7 +115,7 @@ export class AddUpdateUserComponent  implements OnInit {
               duration: 2000,
               color: 'danger'
             });
-            await toast.present();            
+            await toast.present();        
           }
         } catch (err) {
           console.error('Error al agregar el usuario:', err);
