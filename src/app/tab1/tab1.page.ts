@@ -1,4 +1,5 @@
-import { Component, ViewChild } from '@angular/core';
+// src/app/tab1/tab1.page.ts
+import { Component, ViewChild, OnInit } from '@angular/core';
 import { AlertController, IonContent, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +9,9 @@ import { AddUpdatePrestamoComponent } from '../shared/modals/add-update-prestamo
 import { DevolverLibroComponent } from '../shared/modals/devolver-libro/devolver-libro.component';
 import { HistorialDevolucionesComponent } from '../shared/modals/historial-devoluciones/historial-devoluciones.component';
 import { SharedModule } from '../shared/shared.module';
-import { Prestamo } from '../models/prestamo.model'; // Asegúrate de importar el modelo Prestamo
+import { Prestamo } from '../models/prestamo.model';
+// Ya no necesitamos importar User aquí si la información del usuario viene directamente en Prestamo
+// import { User } from '../models/user.model';
 
 @Component({
   selector: 'app-tab1',
@@ -25,11 +28,13 @@ import { Prestamo } from '../models/prestamo.model'; // Asegúrate de importar e
     HistorialDevolucionesComponent,
   ],
 })
-export class Tab1Page {
+export class Tab1Page implements OnInit {
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
-  prestamos: Prestamo[] = []; // Esta será la lista completa de préstamos
-  filteredPrestamos: Prestamo[] = []; // Esta será la lista de préstamos filtrados/mostrados
+  prestamos: Prestamo[] = [];
+  filteredPrestamos: Prestamo[] = [];
+  // Ya no necesitamos la lista de users separada
+  // users: User[] = [];
   searchTerm: string = '';
   showScrollToTop = false;
 
@@ -39,7 +44,9 @@ export class Tab1Page {
     private alertCtrl: AlertController
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
+    // Ya no necesitamos cargar usuarios separadamente
+    // await this.loadUsers();
     this.loadPrestamos();
   }
 
@@ -47,108 +54,96 @@ export class Tab1Page {
     this.loadPrestamos();
   }
 
-  async loadPrestamos() {
-    console.log('Intentando cargar préstamos...');
+  // Eliminamos la función loadUsers, ya no es necesaria
+  /*
+  async loadUsers() {
     try {
-      const result = await (window as any).electronAPI.getPrestamos();
-      console.log('Resultado de getPrestamos (ElectronAPI):', result);
-
+      const result = await (window as any).electronAPI.getUsuarios();
       if (result.success) {
-        // Asegúrate de que result.prestamos es un array antes de asignarlo
-        if (Array.isArray(result.prestamos)) {
-          this.prestamos = result.prestamos;
-          console.log('Préstamos cargados (this.prestamos):', this.prestamos); // Verificar aquí el contenido
-        } else {
-          console.warn('Advertencia: result.prestamos no es un array o está vacío.', result.prestamos);
-          this.prestamos = []; // Asegurarse de que sea un array vacío si no es válido
-        }
-        this.filterPrestamos(); // Llama al filtro después de cargar
+        this.users = result.users;
+        console.log('✅ Usuarios cargados en Tab1Page:', this.users);
       } else {
-        this.presentToast(
-          result.message || 'Error al cargar los préstamos',
-          'danger'
-        );
-        this.prestamos = [];
-        this.filterPrestamos(); // Asegurarse de vaciar la lista en caso de error
+        console.error('❌ Error cargando usuarios en Tab1Page:', result.message);
+        this.presentToast('Error al cargar usuarios.', 'danger');
       }
     } catch (error) {
-      console.error('Error en loadPrestamos (catch block):', error);
-      this.presentToast('Error de conexión al cargar préstamos', 'danger');
-      this.prestamos = [];
-      this.filterPrestamos(); // Asegurarse de vaciar la lista en caso de error
+      console.error('❌ Error de conexión al cargar usuarios en Tab1Page:', error);
+      this.presentToast('Error de conexión al cargar usuarios.', 'danger');
+    }
+  }
+  */
+
+  async loadPrestamos() {
+    try {
+      const result = await (window as any).electronAPI.getPrestamos();
+      if (result.success) {
+        // Asignamos directamente los préstamos, ya contienen la información del usuario
+        this.prestamos = result.prestamos;
+        console.log('✅ Préstamos cargados y procesados:', this.prestamos);
+        this.filterPrestamos();
+      } else {
+        const toast = await this.toastCtrl.create({
+          message: result.message || 'Error al cargar los préstamos',
+          duration: 3000,
+          color: 'danger'
+        });
+        await toast.present();
+      }
+    } catch (error) {
+      console.error('Error al cargar los préstamos (catch):', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Error de conexión al cargar préstamos',
+        duration: 3000,
+        color: 'danger'
+      });
+      await toast.present();
     }
   }
 
   filterPrestamos() {
-    const searchTermLower = this.searchTerm.toLowerCase();
-    console.log('Filtrando préstamos con término:', searchTermLower);
-    console.log('Estado de this.prestamos al inicio de filterPrestamos:', this.prestamos); // Nuevo log
+    const searchTerm = this.searchTerm.toLowerCase();
 
-    // 1. Verificar si this.prestamos es un array válido
-    if (!Array.isArray(this.prestamos)) {
-      console.error('Error: this.prestamos no es un array en filterPrestamos.', this.prestamos);
-      this.filteredPrestamos = [];
-      return;
-    }
-
-    // 2. Si el array está vacío, no hay nada que filtrar
-    if (this.prestamos.length === 0) {
-      console.log('No hay préstamos para filtrar o el array está vacío.');
-      this.filteredPrestamos = [];
-      return;
-    }
-
-    if (searchTermLower.trim() === '') {
+    if (searchTerm.trim() === '') {
       this.filteredPrestamos = this.prestamos;
     } else {
       this.filteredPrestamos = this.prestamos.filter(prestamo => {
-        // Asegúrate de que prestamo y sus propiedades existan antes de acceder a ellas
-        const usuarioNombre = prestamo.usuarioNombre?.toLowerCase() ?? '';
-        const usuarioApellido = prestamo.usuarioApellido?.toLowerCase() ?? '';
-        const fechaPrestamo = prestamo.fechaPrestamo?.toLowerCase() ?? '';
+        // Usamos las propiedades usuarioNombres, usuarioApellidos y usuarioCedula directamente
+        const userMatch = prestamo.usuarioNombres?.toLowerCase().includes(searchTerm) ||
+                          prestamo.usuarioApellidos?.toLowerCase().includes(searchTerm);
+                          // Si tienes cedula en Prestamo, úsala también:
+                          // prestamo.usuarioCedula?.toLowerCase().includes(searchTerm);
 
-        const librosMatch = prestamo.libros?.some((libro) => {
-          const titulo = libro.titulo?.toLowerCase() ?? '';
-          const codigo = libro.codigo?.toLowerCase() ?? '';
-          return titulo.includes(searchTermLower) || codigo.includes(searchTermLower);
-        }) ?? false; // Si prestamo.libros es undefined o null, librosMatch es false
+        const bookMatch = prestamo.libros.some(libro =>
+          libro.titulo.toLowerCase().includes(searchTerm) ||
+          libro.codigo.toLowerCase().includes(searchTerm)
+        );
 
-        const match =
-          usuarioNombre.includes(searchTermLower) ||
-          usuarioApellido.includes(searchTermLower) ||
-          fechaPrestamo.includes(searchTermLower) ||
-          librosMatch;
-        // console.log(`Préstamo: ${prestamo.usuarioNombre} ${prestamo.usuarioApellido}, Coincide: ${match}`); // Descomentar para depurar el filtro
-        return match;
+        return userMatch || bookMatch;
       });
-      console.log('Préstamos filtrados (con término de búsqueda):', this.filteredPrestamos);
     }
   }
 
   async addPrestamo() {
-    const { success } = await this.utils.presentModal({
+    const response = await this.utils.presentModal({
       component: AddUpdatePrestamoComponent,
       cssClass: 'modal-fullscreen',
-      componentProps: {
-        // No pasamos préstamo para agregar
-      },
     });
 
-    if (success) {
+    if (response && response.success) {
       this.loadPrestamos();
     }
   }
 
   async devolverLibro(prestamo: Prestamo) {
-    const { success } = await this.utils.presentModal({
+    const response = await this.utils.presentModal({
       component: DevolverLibroComponent,
       cssClass: 'modal-fullscreen',
       componentProps: {
-        prestamo: prestamo,
-      },
+        prestamo: prestamo
+      }
     });
 
-    if (success) {
+    if (response && response.success) {
       this.loadPrestamos();
     }
   }
@@ -156,35 +151,37 @@ export class Tab1Page {
   async confirmDelete(prestamo: Prestamo) {
     const alert = await this.alertCtrl.create({
       header: 'Confirmar Eliminación',
-      message: `¿Estás seguro de que quieres eliminar el préstamo de ${prestamo.usuarioNombre} ${prestamo.usuarioApellido}?`, // <-- CORRECCIÓN AQUÍ TAMBIÉN
+      // Usamos las propiedades directamente del préstamo
+      message: `¿Estás seguro de que quieres eliminar el préstamo de "${prestamo.usuarioNombres} ${prestamo.usuarioApellidos}"?`,
       buttons: [
         {
           text: 'Cancelar',
-          role: 'cancel',
+          role: 'cancel'
         },
         {
           text: 'Eliminar',
           handler: () => {
             this.deletePrestamo(prestamo.id);
-          },
-        },
-      ],
+          }
+        }
+      ]
     });
     await alert.present();
   }
 
   async deletePrestamo(prestamoId: number) {
     try {
-      const result = await window.electronAPI.deletePrestamo(prestamoId);
+      const result = await (window as any).electronAPI.deletePrestamo(prestamoId);
       if (result.success) {
-        await this.presentToast('Préstamo eliminado exitosamente', 'success');
+        this.presentToast('Préstamo eliminado exitosamente.', 'success');
         this.loadPrestamos();
       } else {
-        await this.presentToast(result.message || 'Error al eliminar préstamo', 'danger');
+        this.presentToast(result.message || 'Error al eliminar el préstamo.', 'danger');
+        console.error('❌ Error en Electron API al eliminar préstamo:', result.error);
       }
     } catch (err) {
-      console.error('Error al eliminar el préstamo:', err);
-      await this.presentToast('Error de conexión al eliminar préstamo', 'danger');
+      console.error('❌ Error al eliminar el préstamo:', err);
+      this.presentToast('Error de comunicación al eliminar el préstamo.', 'danger');
     }
   }
 
@@ -192,6 +189,7 @@ export class Tab1Page {
     await this.utils.presentModal({
       component: HistorialDevolucionesComponent,
       cssClass: 'modal-fullscreen',
+      backdropDismiss: false,
     });
   }
 
@@ -207,9 +205,9 @@ export class Tab1Page {
   async presentToast(message: string, color: string) {
     const toast = await this.toastCtrl.create({
       message: message,
-      duration: 2000,
-      color: color
+      duration: 3000,
+      color: color,
     });
-    await toast.present();
+    toast.present();
   }
 }

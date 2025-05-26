@@ -42,9 +42,9 @@ ipcMain.handle('login', async (event, username, password) => {
       (err, row) => {
         if (err) {
           console.error('Error en login (Electron):', err);
-          resolve({ success: false, message: err.message || 'Error en la base de datos' });
+          resolve({ success: false, message: 'Error interno del servidor' });
         } else if (row) {
-          resolve({ success: true, message: 'Login exitoso' });
+          resolve({ success: true, user: row });
         } else {
           resolve({ success: false, message: 'Usuario o contraseña incorrectos' });
         }
@@ -53,10 +53,73 @@ ipcMain.handle('login', async (event, username, password) => {
   });
 });
 
-// Handler para obtener todos los usuarios (tabla 'usuarios')
-ipcMain.handle('getUsuarios', async (event) => {
+// Books Handlers
+ipcMain.handle('insertBook', async (event, book) => {
   return new Promise((resolve, reject) => {
-    db.all(`SELECT * FROM usuarios ORDER BY nombres ASC`, (err, rows) => {
+    const { codigo, titulo, autor, estanteria, fila, caja, ejemplares } = book;
+    db.run(
+      `INSERT INTO books (codigo, titulo, autor, estanteria, fila, caja, ejemplares, prestados) VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
+      [codigo, titulo, autor, estanteria, fila, caja, ejemplares],
+      function (err) {
+        if (err) {
+          console.error('Error al insertar libro (Electron):', err);
+          resolve({ success: false, message: err.message || 'Error al insertar libro' });
+        } else {
+          resolve({ success: true, id: this.lastID });
+        }
+      }
+    );
+  });
+});
+
+ipcMain.handle('getBooks', async () => {
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT * FROM books`, [], (err, rows) => {
+      if (err) {
+        console.error('Error en getBooks (Electron):', err);
+        resolve({ success: false, message: err.message || 'Error al obtener libros' });
+      } else {
+        resolve({ success: true, books: rows });
+      }
+    });
+  });
+});
+
+ipcMain.handle('updateBook', async (event, book) => {
+  return new Promise((resolve, reject) => {
+    const { id, codigo, titulo, autor, estanteria, fila, caja, ejemplares, prestados } = book;
+    db.run(
+      `UPDATE books SET codigo = ?, titulo = ?, autor = ?, estanteria = ?, fila = ?, caja = ?, ejemplares = ?, prestados = ? WHERE id = ?`,
+      [codigo, titulo, autor, estanteria, fila, caja, ejemplares, prestados, id],
+      function (err) {
+        if (err) {
+          console.error('Error al actualizar libro (Electron):', err);
+          resolve({ success: false, message: err.message || 'Error al actualizar libro' });
+        } else {
+          resolve({ success: true, changes: this.changes });
+        }
+      }
+    );
+  });
+});
+
+ipcMain.handle('deleteBook', async (event, id) => {
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM books WHERE id = ?`, [id], function (err) {
+      if (err) {
+        console.error('Error al eliminar libro (Electron):', err);
+        resolve({ success: false, message: err.message || 'Error al eliminar libro' });
+      } else {
+        resolve({ success: true, changes: this.changes });
+      }
+    });
+  });
+});
+
+// User (usuarios) Handlers
+ipcMain.handle('getUsuarios', async () => {
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT * FROM usuarios`, [], (err, rows) => {
       if (err) {
         console.error('Error en getUsuarios (Electron):', err);
         resolve({ success: false, message: err.message || 'Error al obtener usuarios' });
@@ -67,51 +130,21 @@ ipcMain.handle('getUsuarios', async (event) => {
   });
 });
 
-// Handler para eliminar un usuario (tabla 'usuarios')
-ipcMain.handle('deleteUsuario', async (event, userId) => {
+ipcMain.handle('insertUsuario', async (event, user) => {
   return new Promise((resolve, reject) => {
-    db.run(`DELETE FROM usuarios WHERE id = ?`, userId, function(err) {
-      if (err) {
-        console.error('Error en deleteUsuario (Electron):', err);
-        resolve({ success: false, message: err.message || 'Error al eliminar usuario', error: err.message });
-      } else {
-        if (this.changes > 0) {
-          console.log(`Usuario con ID ${userId} eliminado.`);
-          resolve({ success: true, message: 'Usuario eliminado con éxito' });
-        } else {
-          console.warn(`No se encontró usuario con ID ${userId} para eliminar.`);
-          resolve({ success: false, message: 'No se encontró el usuario para eliminar' });
-        }
-      }
-    });
-  });
-});
-
-// Handler para obtener todos los libros
-ipcMain.handle('getBooks', async (event) => {
-  return new Promise((resolve) => {
-    db.all(`SELECT * FROM books ORDER BY titulo ASC`, [], (err, rows) => {
-      if (err) {
-        console.error('Error en getBooks (Electron):', err);
-        resolve({ success: false, message: err.message || 'Error al obtener libros' });
-      } else {
-        resolve({ success: true, data: rows });
-      }
-    });
-  });
-});
-
-// Handler para insertar un nuevo libro
-ipcMain.handle('insertBook', async (event, book) => {
-  return new Promise((resolve) => {
-    const { codigo, titulo, autor, estanteria, fila, caja, ejemplares } = book;
+    const { nombres, apellidos, cedula, profesion, lugarTrabajo, tipoUsuario, edad, direccion, canton, celular, correo } = user;
     db.run(
-      `INSERT INTO books (codigo, titulo, autor, estanteria, fila, caja, ejemplares, prestados) VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
-      [codigo, titulo, autor, estanteria, fila, caja, ejemplares],
+      `INSERT INTO usuarios (nombres, apellidos, cedula, profesion, lugarTrabajo, tipoUsuario, edad, direccion, canton, celular, correo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [nombres, apellidos, cedula, profesion, lugarTrabajo, tipoUsuario, edad, direccion, canton, celular, correo],
       function (err) {
         if (err) {
-          console.error('Error en insertBook (Electron):', err);
-          resolve({ success: false, message: err.message || 'Error al insertar libro' });
+          console.error('Error al insertar usuario (Electron):', err);
+          // sqlite3.Error.SQLITE_CONSTRAINT para duplicados
+          if (err.message.includes('UNIQUE constraint failed')) {
+            resolve({ success: false, message: 'La cédula ya está registrada.' });
+          } else {
+            resolve({ success: false, message: err.message || 'Error al insertar usuario' });
+          }
         } else {
           resolve({ success: true, id: this.lastID });
         }
@@ -120,17 +153,20 @@ ipcMain.handle('insertBook', async (event, book) => {
   });
 });
 
-// Handler para actualizar un libro existente
-ipcMain.handle('updateBook', async (event, book) => {
-  return new Promise((resolve) => {
-    const { id, codigo, titulo, autor, estanteria, fila, caja, ejemplares, prestados } = book;
+ipcMain.handle('updateUsuario', async (event, user) => {
+  return new Promise((resolve, reject) => {
+    const { id, nombres, apellidos, cedula, profesion, lugarTrabajo, tipoUsuario, edad, direccion, canton, celular, correo } = user;
     db.run(
-      `UPDATE books SET codigo = ?, titulo = ?, autor = ?, estanteria = ?, fila = ?, caja = ?, ejemplares = ?, prestados = ? WHERE id = ?`,
-      [codigo, titulo, autor, estanteria, fila, caja, ejemplares, prestados, id],
+      `UPDATE usuarios SET nombres = ?, apellidos = ?, cedula = ?, profesion = ?, lugarTrabajo = ?, tipoUsuario = ?, edad = ?, direccion = ?, canton = ?, celular = ?, correo = ? WHERE id = ?`,
+      [nombres, apellidos, cedula, profesion, lugarTrabajo, tipoUsuario, edad, direccion, canton, celular, correo, id],
       function (err) {
         if (err) {
-          console.error('Error en updateBook (Electron):', err);
-          resolve({ success: false, message: err.message || 'Error al actualizar libro' });
+          console.error('Error al actualizar usuario (Electron):', err);
+          if (err.message.includes('UNIQUE constraint failed')) {
+            resolve({ success: false, message: 'La cédula ya está registrada para otro usuario.' });
+          } else {
+            resolve({ success: false, message: err.message || 'Error al actualizar usuario' });
+          }
         } else {
           resolve({ success: true, changes: this.changes });
         }
@@ -139,13 +175,12 @@ ipcMain.handle('updateBook', async (event, book) => {
   });
 });
 
-// Handler para eliminar un libro
-ipcMain.handle('deleteBook', async (event, id) => {
-  return new Promise((resolve) => {
-    db.run(`DELETE FROM books WHERE id = ?`, [id], function (err) {
+ipcMain.handle('deleteUsuario', async (event, id) => {
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM usuarios WHERE id = ?`, [id], function (err) {
       if (err) {
-        console.error('Error en deleteBook (Electron):', err);
-        resolve({ success: false, message: err.message || 'Error al eliminar libro' });
+        console.error('Error al eliminar usuario (Electron):', err);
+        resolve({ success: false, message: err.message || 'Error al eliminar usuario' });
       } else {
         resolve({ success: true, changes: this.changes });
       }
@@ -153,21 +188,85 @@ ipcMain.handle('deleteBook', async (event, id) => {
   });
 });
 
+// Préstamos y Devoluciones Handlers
+ipcMain.handle('insertPrestamo', async (event, data) => {
+  return new Promise(async (resolve, reject) => {
+    const { userId, fechaPrestamo, libros } = data;
 
-// Handler para obtener todos los préstamos activos
-ipcMain.handle('getPrestamos', async (event) => {
-  return new Promise((resolve) => {
+    // Iniciar transacción
+    db.run('BEGIN TRANSACTION;', async function (err) {
+      if (err) {
+        console.error('Error al iniciar transacción:', err);
+        return resolve({ success: false, message: 'Error al iniciar transacción.' });
+      }
+
+      try {
+        // 1. Insertar el préstamo
+        const insertPrestamoResult = await new Promise((res, rej) => {
+          db.run(
+            `INSERT INTO prestamos (userId, fechaPrestamo, librosJson) VALUES (?, ?, ?)`,
+            [userId, fechaPrestamo, JSON.stringify(libros)],
+            function (err) {
+              if (err) {
+                rej(err);
+              } else {
+                res({ success: true, id: this.lastID });
+              }
+            }
+          );
+        });
+
+        // 2. Actualizar el contador 'prestados' para cada libro
+        for (const libro of libros) {
+          const updateBookResult = await new Promise((res, rej) => {
+            db.run(
+              `UPDATE books SET prestados = prestados + 1 WHERE id = ?`,
+              [libro.id],
+              function (err) {
+                if (err) {
+                  rej(err);
+                } else {
+                  res({ success: true, changes: this.changes });
+                }
+              }
+            );
+          });
+        }
+
+        // Si todo fue bien, confirmar transacción
+        db.run('COMMIT;', function (err) {
+          if (err) {
+            console.error('Error al confirmar transacción:', err);
+            db.run('ROLLBACK;'); // Rollback en caso de error de commit
+            resolve({ success: false, message: 'Error al confirmar préstamo.' });
+          } else {
+            resolve({ success: true, prestamoId: insertPrestamoResult.id });
+          }
+        });
+
+      } catch (error) {
+        console.error('Error durante la transacción de préstamo:', error);
+        db.run('ROLLBACK;'); // Rollback si hay cualquier error
+        resolve({ success: false, message: error.message || 'Error al realizar el préstamo.' });
+      }
+    });
+  });
+});
+
+ipcMain.handle('getPrestamos', async () => {
+  return new Promise((resolve, reject) => {
     const query = `
       SELECT
         p.id AS prestamoId,
         p.fechaPrestamo,
-        p.userId,
+        p.fechaDevolucion,
+        u.id AS usuarioId,
         u.nombres AS usuarioNombres,
         u.apellidos AS usuarioApellidos,
         p.librosJson
       FROM prestamos p
       JOIN usuarios u ON p.userId = u.id
-      WHERE p.fechaDevolucion IS NULL -- Solo préstamos activos
+      WHERE p.fechaDevolucion IS NULL
       ORDER BY p.fechaPrestamo DESC
     `;
     db.all(query, [], (err, rows) => {
@@ -180,16 +279,17 @@ ipcMain.handle('getPrestamos', async (event) => {
           try {
             librosParsed = row.librosJson ? JSON.parse(row.librosJson) : [];
           } catch (parseError) {
-            console.error('Error al parsear librosJson en préstamo:', parseError);
+            console.error('Error al parsear librosJson:', parseError);
             librosParsed = [];
           }
           return {
             id: row.prestamoId,
             fechaPrestamo: row.fechaPrestamo,
-            userId: row.userId,
-            usuarioNombre: row.usuarioNombres,
-            usuarioApellido: row.usuarioApellidos,
-            libros: librosParsed
+            fechaDevolucion: row.fechaDevolucion,
+            userId: row.usuarioId,
+            usuarioNombres: row.usuarioNombres, // CORRECTO: usa usuarioNombres
+            usuarioApellidos: row.usuarioApellidos, // CORRECTO: usa usuarioApellidos
+            libros: librosParsed,
           };
         });
         resolve({ success: true, prestamos: prestamos });
@@ -198,156 +298,68 @@ ipcMain.handle('getPrestamos', async (event) => {
   });
 });
 
-// Handler para insertar un nuevo préstamo
-ipcMain.handle('insertPrestamo', async (event, prestamoData) => {
-  return new Promise((resolve) => {
-    const { userId, fechaPrestamo, libros } = prestamoData;
-    const librosJson = JSON.stringify(libros);
-
-    db.run(`INSERT INTO prestamos (userId, fechaPrestamo, librosJson) VALUES (?, ?, ?)`,
-      [userId, fechaPrestamo, librosJson],
-      function(err) {
-        if (err) {
-          console.error('Error al insertar préstamo:', err);
-          resolve({ success: false, message: err.message || 'Error al registrar el préstamo', error: err.message });
-        } else {
-          const prestamoId = this.lastID;
-          // Actualizar la cantidad de libros prestados
-          const updatePromises = libros.map(libro => {
-            return new Promise((resolveUpdate) => {
-              db.run(`UPDATE books SET prestados = prestados + 1 WHERE id = ?`, libro.id, function(errUpdate) {
-                if (errUpdate) {
-                  console.error(`Error al actualizar prestados para libro ${libro.id}:`, errUpdate);
-                  resolveUpdate({ success: false, message: `Error al actualizar libro ${libro.codigo}` });
-                } else {
-                  resolveUpdate({ success: true });
-                }
-              });
-            });
-          });
-
-          Promise.all(updatePromises).then(() => {
-            console.log(`✅ Préstamo insertado con ID: ${prestamoId}`);
-            resolve({ success: true, message: 'Préstamo registrado con éxito', prestamoId: prestamoId });
-          }).catch(error => {
-            console.error('Error en promesas de actualización de libros:', error);
-            resolve({ success: false, message: 'Préstamo registrado, pero hubo un error al actualizar libros.' });
-          });
-        }
-      }
-    );
-  });
-});
-
-// Handler para registrar la devolución de libros y actualizar el estado
 ipcMain.handle('devolverLibros', async (event, data) => {
-  return new Promise((resolve) => {
-    const { prestamoId, fechaDevolucion, librosDevueltos } = data;
+  return new Promise(async (resolve, reject) => {
+    const { prestamoId, librosDevueltosIds, fechaDevolucion } = data;
 
-    db.serialize(() => {
-      db.run('BEGIN TRANSACTION;');
+    db.run('BEGIN TRANSACTION;', async function (err) {
+      if (err) {
+        console.error('Error al iniciar transacción de devolución:', err);
+        return resolve({ success: false, message: 'Error al iniciar transacción.' });
+      }
 
-      // 1. Actualizar la fecha de devolución en la tabla 'prestamos'
-      const updatePrestamoQuery = `UPDATE prestamos SET fechaDevolucion = ? WHERE id = ?`;
-      db.run(updatePrestamoQuery, [fechaDevolucion, prestamoId], function(err) {
-        if (err) {
-          console.error('Error al actualizar fechaDevolucion:', err);
-          db.run('ROLLBACK;');
-          return resolve({ success: false, message: err.message || 'Error al registrar la devolución del préstamo.' });
-        }
-        console.log(`Fecha de devolución actualizada para préstamo ID: ${prestamoId}`);
-
-        // 2. Decrementar la cantidad de libros 'prestados' en la tabla 'books'
-        let allUpdatesSuccessful = true;
-        librosDevueltos.forEach(libro => {
-          db.run(`UPDATE books SET prestados = prestados - 1 WHERE id = ?`, libro.id, function(errUpdate) {
-            if (errUpdate) {
-              console.error(`Error al decrementar 'prestados' para libro ID ${libro.id}:`, errUpdate);
-              allUpdatesSuccessful = false;
-            } else {
-              console.log(`'prestados' decremented for book ID: ${libro.id}`);
+      try {
+        // 1. Actualizar la fecha de devolución en el préstamo
+        const updatePrestamoResult = await new Promise((res, rej) => {
+          db.run(
+            `UPDATE prestamos SET fechaDevolucion = ? WHERE id = ?`,
+            [fechaDevolucion, prestamoId],
+            function (err) {
+              if (err) {
+                rej(err);
+              } else {
+                res({ success: true, changes: this.changes });
+              }
             }
-          });
+          );
         });
 
-        if (allUpdatesSuccessful) {
-          db.run('COMMIT;');
-          resolve({ success: true, message: 'Libros devueltos y préstamo cerrado con éxito.' });
-        } else {
-          db.run('ROLLBACK;');
-          resolve({ success: false, message: 'Error parcial al actualizar la cantidad de libros prestados.' });
-        }
-      });
-    });
-  });
-});
-
-ipcMain.handle('deletePrestamo', async (event, prestamoId) => {
-  return new Promise((resolve, reject) => {
-    db.serialize(() => {
-      db.get('SELECT librosJson FROM prestamos WHERE id = ?', [prestamoId], (err, row) => {
-        if (err) {
-          console.error('Error al obtener librosJson del préstamo para eliminar:', err);
-          return resolve({ success: false, message: err.message || 'Error al obtener datos del préstamo' });
-        }
-        if (!row) {
-          return resolve({ success: false, message: 'Préstamo no encontrado' });
-        }
-
-        const librosPrestados = JSON.parse(row.librosJson || '[]');
-
-        // Iniciar transacción
-        db.run('BEGIN TRANSACTION;', (err) => {
-          if (err) {
-            console.error('Error al iniciar transacción para eliminar préstamo:', err);
-            return resolve({ success: false, message: 'Error de transacción' });
-          }
-
-          let updatePromises = [];
-          for (const libro of librosPrestados) {
-            updatePromises.push(new Promise((res, rej) => {
-              db.run(
-                'UPDATE books SET prestados = prestados - 1 WHERE id = ?',
-                [libro.id],
-                function (updateErr) {
-                  if (updateErr) {
-                    console.error('Error al decrementar prestados del libro:', updateErr);
-                    rej(updateErr);
-                  } else {
-                    res();
-                  }
-                }
-              );
-            }));
-          }
-
-          Promise.all(updatePromises)
-            .then(() => {
-              db.run('DELETE FROM prestamos WHERE id = ?', [prestamoId], function (deleteErr) {
-                if (deleteErr) {
-                  console.error('Error al eliminar préstamo:', deleteErr);
-                  db.run('ROLLBACK;', () => {
-                    resolve({ success: false, message: deleteErr.message || 'Error al eliminar préstamo' });
-                  });
+        // 2. Decrementar el contador 'prestados' para cada libro devuelto
+        for (const libroId of librosDevueltosIds) {
+          await new Promise((res, rej) => {
+            db.run(
+              `UPDATE books SET prestados = prestados - 1 WHERE id = ? AND prestados > 0`, // Asegura que no baje de 0
+              [libroId],
+              function (err) {
+                if (err) {
+                  rej(err);
                 } else {
-                  db.run('COMMIT;', () => {
-                    resolve({ success: true, message: 'Préstamo eliminado exitosamente' });
-                  });
+                  res({ success: true, changes: this.changes });
                 }
-              });
-            })
-            .catch((rollbackErr) => {
-              db.run('ROLLBACK;', () => {
-                resolve({ success: false, message: rollbackErr.message || 'Error al actualizar libros y eliminar préstamo' });
-              });
-            });
+              }
+            );
+          });
+        }
+
+        db.run('COMMIT;', function (err) {
+          if (err) {
+            console.error('Error al confirmar transacción de devolución:', err);
+            db.run('ROLLBACK;');
+            resolve({ success: false, message: 'Error al confirmar devolución.' });
+          } else {
+            resolve({ success: true });
+          }
         });
-      });
+
+      } catch (error) {
+        console.error('Error durante la transacción de devolución:', error);
+        db.run('ROLLBACK;');
+        resolve({ success: false, message: error.message || 'Error al procesar la devolución.' });
+      }
     });
   });
 });
 
-// Handler para obtener el historial de devoluciones
 ipcMain.handle('getHistorialDevoluciones', async (event) => {
   return new Promise((resolve, reject) => {
     const query = `
@@ -382,9 +394,9 @@ ipcMain.handle('getHistorialDevoluciones', async (event) => {
             fechaPrestamo: row.fechaPrestamo,
             fechaDevolucion: row.fechaDevolucion,
             userId: row.usuarioId,
-            usuarioNombre: row.usuarioNombres,
-            usuarioApellido: row.usuarioApellidos,
-            libros: librosParsed
+            usuarioNombres: row.usuarioNombres, // CORRECTO: usa usuarioNombres
+            usuarioApellidos: row.usuarioApellidos, // CORRECTO: usa usuarioApellidos
+            libros: librosParsed,
           };
         });
         resolve({ success: true, historial: historial });
@@ -393,53 +405,36 @@ ipcMain.handle('getHistorialDevoluciones', async (event) => {
   });
 });
 
-// Handler para insertar un nuevo usuario (tabla 'usuarios')
-ipcMain.handle('insertUsuario', async (event, userData) => {
-  return new Promise((resolve) => {
-    const {
-      nombres, apellidos, cedula, profesion, lugarTrabajo,
-      tipoUsuario, edad, direccion, canton, celular, correo
-    } = userData;
-    const query = `INSERT INTO usuarios (nombres, apellidos, cedula, profesion, lugarTrabajo, tipoUsuario, edad, direccion, canton, celular, correo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    db.run(query, [
-      nombres, apellidos, cedula, profesion, lugarTrabajo,
-      tipoUsuario, edad, direccion, canton, celular, correo
-    ], function(err) {
+// NUEVO HANDLER: Verificar si se puede prestar un libro (Límite de 2 ejemplares)
+ipcMain.handle('checkBookAvailabilityForPrestamo', async (event, bookId) => {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT ejemplares, prestados FROM books WHERE id = ?`, [bookId], (err, row) => {
       if (err) {
-        console.error('❌ Error al insertar usuario:', err);
-        resolve({ success: false, message: err.message || 'Error al insertar usuario', error: err.message });
+        console.error('Error al verificar disponibilidad del libro:', err);
+        resolve({ success: false, message: 'Error al verificar disponibilidad del libro.' });
+      } else if (row) {
+        const MAX_PRESTAMOS_POR_LIBRO = 2; // Define tu límite máximo aquí para cualquier libro
+
+        if (row.prestados < MAX_PRESTAMOS_POR_LIBRO) {
+          resolve({ success: true, canLend: true, message: 'Libro disponible para préstamo.' });
+        } else {
+          resolve({ success: true, canLend: false, message: `Ya se han prestado ${MAX_PRESTAMOS_POR_LIBRO} ejemplares de este libro. No se puede prestar uno adicional.` });
+        }
+
       } else {
-        console.log(`✅ Usuario insertado con ID: ${this.lastID}`);
-        resolve({ success: true, message: 'Usuario agregado con éxito', userId: this.lastID });
+        resolve({ success: false, message: 'Libro no encontrado.' });
       }
     });
   });
 });
 
-// Handler para actualizar un usuario existente (tabla 'usuarios')
-ipcMain.handle('updateUsuario', async (event, userData) => {
-  return new Promise((resolve) => {
-    const {
-      id, nombres, apellidos, cedula, profesion, lugarTrabajo,
-      tipoUsuario, edad, direccion, canton, celular, correo
-    } = userData;
-    const query = `UPDATE usuarios SET nombres = ?, apellidos = ?, cedula = ?, profesion = ?, lugarTrabajo = ?, tipoUsuario = ?, edad = ?, direccion = ?, canton = ?, celular = ?, correo = ? WHERE id = ?`;
-    db.run(query, [
-      nombres, apellidos, cedula, profesion, lugarTrabajo,
-      tipoUsuario, edad, direccion, canton, celular, correo, id
-    ], function(err) {
-      if (err) {
-        console.error('❌ Error al actualizar usuario:', err);
-        resolve({ success: false, message: err.message || 'Error al actualizar usuario', error: err.message });
-      } else {
-        if (this.changes > 0) {
-          console.log(`✅ Usuario con ID ${id} actualizado.`);
-          resolve({ success: true, message: 'Usuario actualizado con éxito' });
-        } else {
-          console.warn(`⚠️ No se encontró usuario con ID ${id} para actualizar.`);
-          resolve({ success: false, message: 'No se encontró el usuario para actualizar o no hubo cambios' });
-        }
-      }
-    });
+
+process.on('exit', () => {
+  db.close((err) => {
+    if (err) {
+      console.error('Error al cerrar la base de datos:', err.message);
+    } else {
+      console.log('❌ Base de datos desconectada.');
+    }
   });
 });

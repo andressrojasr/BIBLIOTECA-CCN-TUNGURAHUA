@@ -3,7 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   insertBook: (libro) => ipcRenderer.invoke('insertBook', libro),
-  getBooks: () => ipcRenderer.invoke('getBooks'), // <-- Debe estar aquí
+  getBooks: () => ipcRenderer.invoke('getBooks'),
   login: (username, password) => ipcRenderer.invoke('login', username, password),
   updateBook: (book) => ipcRenderer.invoke('updateBook', book),
   deleteBook: (id) => ipcRenderer.invoke('deleteBook', id),
@@ -19,5 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPrestamos: () => ipcRenderer.invoke('getPrestamos'),
   devolverLibros: (data) => ipcRenderer.invoke('devolverLibros', data),
   getHistorialDevoluciones: () => ipcRenderer.invoke('getHistorialDevoluciones'),
-  deletePrestamo: (id) => ipcRenderer.invoke('deletePrestamo', id),
+
+  // NUEVA FUNCIÓN: Verificar disponibilidad de libro para préstamo
+  checkBookAvailabilityForPrestamo: (bookId) => ipcRenderer.invoke('checkBookAvailabilityForPrestamo', bookId),
 });

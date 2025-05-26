@@ -1,3 +1,4 @@
+// src/app/shared/modals/add-update-prestamo/add-update-prestamo.component.ts
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -5,10 +6,8 @@ import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 import { User } from '../../../models/user.model';
 import { Book } from '../../../models/book.model';
 import { Prestamo } from '../../../models/prestamo.model';
-import { HeaderComponent } from '../../components/header/header.component'; // <-- ¡AÑADIDA ESTA LÍNEA!
-// ELIMINAR ESTA LÍNEA: import { SharedModule } from '../../shared.module'; // NO DEBE IMPORTARSE AQUÍ SI ES STANDALONE
+import { HeaderComponent } from '../../components/header/header.component';
 
-// Definimos la interfaz PrestamoLibro para claridad, asumiendo estas son las propiedades que llegan con el prestamo
 interface PrestamoLibro {
   id: number;
   titulo: string;
@@ -25,11 +24,11 @@ interface PrestamoLibro {
     FormsModule,
     IonicModule,
     ReactiveFormsModule,
-    HeaderComponent // <-- ¡AÑADIDA ESTA LÍNEA y reemplaza a SharedModule!
+    HeaderComponent
   ],
 })
 export class AddUpdatePrestamoComponent implements OnInit {
-  @Input() prestamo: Prestamo | null = null; // Puede ser un préstamo existente o nulo
+  @Input() prestamo: Prestamo | null = null;
 
   title: string = 'Registrar Nuevo Préstamo';
   prestamoForm!: FormGroup;
@@ -97,8 +96,10 @@ export class AddUpdatePrestamoComponent implements OnInit {
   async loadBooks() {
     try {
       const result = await (window as any).electronAPI.getBooks();
+      console.log('Resultado de getBooks en AddUpdatePrestamo:', result); // Agrega este console.log para verificar
       if (result.success) {
-        this.books = result.data;
+        this.books = result.books; // CAMBIADO: de result.data a result.books
+        console.log('Libros cargados para selección:', this.books); // Agrega este console.log para verificar
         if (this.prestamo) {
           this.patchFormWithPrestamoData();
         }
@@ -141,7 +142,7 @@ export class AddUpdatePrestamoComponent implements OnInit {
 
     this.isProcessing = true;
     const formValue = this.prestamoForm.value;
-    const libroIds = this.selectedBooks.map(book => book.id); // Esta línea ya no es necesaria si pasas el objeto completo
+    const libroIds = this.selectedBooks.map(book => book.id);
 
     const prestamoData = {
       userId: formValue.usuarioId,

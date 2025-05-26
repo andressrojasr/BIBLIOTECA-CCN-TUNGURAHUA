@@ -14,15 +14,16 @@
   </div>
   <ion-grid class="table">
     <ion-row class="header-row">
-      <ion-col size="3" class="first"><strong>Usuario</strong></ion-col>
+      <ion-col size="2" class="first"><strong>Usuario</strong></ion-col>
       <ion-col size="4"><strong>Libros Prestados</strong></ion-col>
-      <ion-col size="2"><strong>Fecha Préstamo</strong></ion-col>
-      <ion-col size="3"><strong>Acciones</strong></ion-col>
+      <ion-col size="2"><strong>F. Préstamo</strong></ion-col>
+      <ion-col size="2"><strong>F. Devolución</strong></ion-col>
+      <ion-col size="2" class="last"><strong>Acciones</strong></ion-col>
     </ion-row>
 
     <ion-row *ngFor="let prestamo of filteredPrestamos" class="rows ion-align-items-center">
-      <ion-col size="3" class="first" data-label="Usuario">
-        {{ prestamo.usuarioNombre }} {{ prestamo.usuarioApellido }}
+      <ion-col size="2" class="first" data-label="Usuario">
+        {{ prestamo.usuarioNombres }} {{ prestamo.usuarioApellidos }}
       </ion-col>
       <ion-col size="4" data-label="Libros Prestados">
         <ion-list>
@@ -30,19 +31,36 @@
         </ion-list>
       </ion-col>
       <ion-col size="2" data-label="Fecha Préstamo">
-        {{ prestamo.fechaPrestamo }}
+        {{ prestamo.fechaPrestamo | date:'dd/MM/yyyy' }}
       </ion-col>
-      <ion-col size="3" data-label="Acciones">
+      <ion-col size="2" data-label="Fecha Devolución">
+        {{ prestamo.fechaDevolucion ? (prestamo.fechaDevolucion | date:'dd/MM/yyyy') : 'Pendiente' }}
+      </ion-col>
+      <ion-col size="2" class="last" data-label="Acciones">
         <ion-button color="primary" shape="round" (click)="devolverLibro(prestamo)">
           <ion-icon name="arrow-undo-outline"></ion-icon>
           Devolver
         </ion-button>
+        <ion-button color="danger" shape="round" (click)="confirmDelete(prestamo)">
+          <ion-icon name="trash-outline"></ion-icon>
+          Eliminar
+        </ion-button>
       </ion-col>
     </ion-row>
+
+    <ion-row *ngIf="filteredPrestamos.length === 0" class="rows empty-table-message">
+      <ion-col size="12" class="ion-text-center ion-padding-top">
+        <ion-text color="medium">
+          <p>No hay préstamos activos para mostrar.</p>
+        </ion-text>
+      </ion-col>
+    </ion-row>
+
   </ion-grid>
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="padding: 15px;" *ngIf="showScrollToTop">
-    <ion-fab-button color="secondary" (click)="scrollToTop()">
-      <ion-icon name="chevron-up-circle"></ion-icon>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="showScrollToTop">
+    <ion-fab-button class="scroll-to-top-button" (click)="scrollToTop()">
+      <ion-icon name="arrow-up"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 </ion-content>

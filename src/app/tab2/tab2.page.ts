@@ -46,9 +46,12 @@ export class Tab2Page implements OnInit {
 
   async loadBooks() {
     try {
-      const result = await window.electronAPI.getBooks(); // Usa la interfaz tipada
+      const result = await (window as any).electronAPI.getBooks();
+      console.log('Resultado de getBooks:', result); // Mantén esto para depuración
       if (result.success) {
-        this.books = result.data;
+        // --- CAMBIO AQUÍ: result.data por result.books ---
+        this.books = result.books; // CAMBIADO
+        console.log('Datos de libros recibidos:', this.books); // Para verificar que ahora son los libros
         this.filterBooks();
       } else {
         const toast = await this.toastCtrl.create({
@@ -59,7 +62,7 @@ export class Tab2Page implements OnInit {
         await toast.present();
       }
     } catch (error) {
-      console.error('Error al cargar los libros:', error);
+      console.error('Error al cargar los libros (catch):', error);
       const toast = await this.toastCtrl.create({
         message: 'Error de conexión al cargar libros',
         duration: 3000,
@@ -71,29 +74,29 @@ export class Tab2Page implements OnInit {
 
 
   async addBook() {
-    const { success } = await this.utils.presentModal({
+    const response = await this.utils.presentModal({
       component: AddUpdateBookComponent,
-      cssClass: 'modal-fullscreen', // <-- Corregido: cssClasses a cssClass
+      cssClass: 'modal-fullscreen',
       componentProps: {
         // No pasamos un 'book' ya que es para agregar
       }
     });
 
-    if (success) {
+    if (response && response.success) {
       this.loadBooks();
     }
   }
 
   async editBook(book: Book) {
-    const { success } = await this.utils.presentModal({
+    const response = await this.utils.presentModal({
       component: AddUpdateBookComponent,
-      cssClass: 'modal-fullscreen', // <-- Corregido: cssClasses a cssClass
+      cssClass: 'modal-fullscreen',
       componentProps: {
         book: book
       }
     });
 
-    if (success) {
+    if (response && response.success) {
       this.loadBooks();
     }
   }
@@ -120,7 +123,7 @@ export class Tab2Page implements OnInit {
 
   async deleteBook(bookId: number) {
     try {
-      const result = await window.electronAPI.deleteBook(bookId); // Usa la interfaz tipada
+      const result = await (window as any).electronAPI.deleteBook(bookId); // Usa la interfaz tipada
       if (result.success) {
         const toast = await this.toastCtrl.create({
           message: 'Libro Eliminado exitosamente',
@@ -167,6 +170,3 @@ export class Tab2Page implements OnInit {
     }
   }
 }
-
-// LA DECLARACIÓN GLOBAL SE MOVIO A src/types/electron.d.ts
-// REMUEVE CUALQUIER DECLARACIÓN SIMILAR DE ESTE ARCHIVO PARA EVITAR CONFLICTOS
