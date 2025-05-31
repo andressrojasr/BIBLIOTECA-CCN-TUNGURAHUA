@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPrestamos: () => ipcRenderer.invoke('getPrestamos'),
   devolverLibros: (data) => ipcRenderer.invoke('devolverLibros', data),
   getHistorialDevoluciones: () => ipcRenderer.invoke('getHistorialDevoluciones'),
+  updatePrestamo: (prestamo) => ipcRenderer.invoke('updatePrestamo', prestamo),
+  devolverLibrosParcial: (data) => ipcRenderer.invoke('devolverLibrosParcial', data),
 
   // NUEVA FUNCIÓN: Verificar disponibilidad de libro para préstamo
   checkBookAvailabilityForPrestamo: (bookId) => ipcRenderer.invoke('checkBookAvailabilityForPrestamo', bookId),

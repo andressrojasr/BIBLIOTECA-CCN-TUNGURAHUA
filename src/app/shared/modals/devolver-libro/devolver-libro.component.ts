@@ -54,44 +54,50 @@ export class DevolverLibroComponent implements OnInit {
     });
   }
 
+  getLibrosPrestados(): string {
+  return this.prestamo?.libros?.map(l => `${l.titulo} (${l.codigo})`).join('\n') || '';
+  }
+
   onBookSelectionChange(event: any) {
     this.selectedLibrosToDevolver = event.detail.value;
     console.log('Libros seleccionados para devolver:', this.selectedLibrosToDevolver);
   }
 
-  async confirmarDevolucion() {
-    if (this.devolucionForm.invalid || this.selectedLibrosToDevolver.length === 0) {
-      this.presentToast('Por favor, selecciona al menos un libro para devolver.', 'warning');
-      return;
-    }
+  // Añade este método si no existe
+async presentToast(message: string, color: string) {
+  const toast = await this.toastCtrl.create({
+    message: message,
+    duration: 3000,
+    color: color
+  });
+  await toast.present();
+}
 
-    try {
-      const result = await (window as any).electronAPI.devolverLibros({
-        prestamoId: this.prestamo.id,
-        libroIds: this.selectedLibrosToDevolver,
-      });
-
-      if (result.success) {
-        this.presentToast(result.message, 'success');
-        this.modalCtrl.dismiss(true);
-      } else {
-        this.presentToast('Error al procesar la devolución: ' + result.message, 'danger');
-        console.error('❌ Error al procesar devolución:', result.error);
-      }
-    } catch (error) {
-      this.presentToast('Error de comunicación con Electron al devolver libros.', 'danger');
-      console.error('❌ Error en Electron API al devolver libros:', error);
-    }
+// Método modificado para devolución parcial
+async confirmarDevolucion() {
+  if (this.devolucionForm.invalid || this.selectedLibrosToDevolver.length === 0) {
+    await this.presentToast('Selecciona al menos un libro para devolver', 'warning');
+    return;
   }
 
-  async presentToast(message: string, color: string) {
-    const toast = await this.toastCtrl.create({
-      message: message,
-      duration: 3000,
-      color: color,
+  try {
+    const result = await (window as any).electronAPI.devolverLibrosParcial({
+      prestamoId: this.prestamo.id,
+      librosDevueltosIds: this.selectedLibrosToDevolver,
+      fechaDevolucion: new Date().toISOString()
     });
-    toast.present();
+
+    if (result.success) {
+      await this.presentToast('Devolución registrada correctamente', 'success');
+      this.modalCtrl.dismiss({ success: true, partial: true });
+    } else {
+      await this.presentToast(result.message || 'Error al registrar devolución', 'danger');
+    }
+  } catch (error) {
+    console.error('Error en devolución parcial:', error);
+    await this.presentToast('Error al procesar la devolución', 'danger');
   }
+}
 
   closeModal() {
     this.modalCtrl.dismiss(false);

@@ -1,39 +1,84 @@
-.modal-content {
-  padding: 20px;
+/* Estilos base (copiados de add-update) */
+ion-content {
+  --background: var(--ion-background-color, #f0f2f5);
+  color: var(--ion-color-step-850, #000);
 }
 
-ion-list {
-  background: var(--ion-background-color, #f2f5f7);
-  padding: 10px;
+.form-wrapper {
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.devolucion-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-item-spacing {
+  margin-bottom: 0;
   border-radius: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-ion-list-header {
-  color: var(--ion-color-tertiary);
-  font-weight: bold;
-  font-size: 1.1em;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 ion-item {
   --background: white;
-  border-radius: 8px;
-  margin-bottom: 5px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-  --padding-start: 10px; // Ajusta el padding para la checkbox
+  --border-color: var(--ion-color-step-200, #ccc);
+  --highlight-color-focused: var(--ion-color-primary);
+  
+  &.item-fill-outline {
+    border: 1px solid var(--ion-color-step-200, #ccc);
+    border-radius: 8px;
+    
+    &.item-has-focus {
+      border-color: var(--ion-color-primary);
+    }
+  }
+
+  ion-label[position="floating"] {
+    padding-bottom: 3px;
+    transform: translateY(-3px);
+  }
+
+  ion-select, ion-input, ion-textarea {
+    --padding-top: 10px;
+    --color: var(--ion-color-step-850, #000);
+    --placeholder-color: var(--ion-color-step-500, #999);
+    --placeholder-opacity: 1;
+  }
 }
 
-ion-checkbox {
-  margin-right: 10px; // Espacio entre checkbox y label
-  --checkbox-background-checked: var(--ion-color-tertiary);
+/* Estilos específicos para devolución */
+.devolucion-form ion-textarea {
+  min-height: 100px;
 }
 
-ion-label {
-  white-space: normal; // Permite que el texto de la etiqueta se envuelva
-}
-
-ion-button {
+ion-button[type="button"] {
   margin-top: 20px;
-  --box-shadow: none;
+  --background: var(--ion-color-tertiary);
+  --color: #000; /* Cambiado de white a #000 (negro) */
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.error-message {
+  font-size: 0.85em;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+
+/* Agrega esto al final de tu archivo devolver-libro.component.scss */
+
+/* Estilos solo para los títulos */
+h1, h2, h3, h4, h5, h6 {
+  color: #000 !important;
+}
+
+/* Estilo específico para el texto "Usuario" que aparece antes de "Bryan Obando" */
+ion-label, ion-card-header, ion-card-title, ion-card-subtitle {
+  color: #000 !important;
 }

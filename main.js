@@ -298,65 +298,64 @@ ipcMain.handle('getPrestamos', async () => {
   });
 });
 
-ipcMain.handle('devolverLibros', async (event, data) => {
+ipcMain.handle('devolverLibrosParcial', async (event, data) => {
   return new Promise(async (resolve, reject) => {
     const { prestamoId, librosDevueltosIds, fechaDevolucion } = data;
+    
+    try {
+      // 1. Obtener el préstamo actual
+      const prestamo = await new Promise((res, rej) => {
+        db.get('SELECT * FROM prestamos WHERE id = ?', [prestamoId], (err, row) => {
+          if (err) rej(err);
+          else res(row);
+        });
+      });
 
-    db.run('BEGIN TRANSACTION;', async function (err) {
-      if (err) {
-        console.error('Error al iniciar transacción de devolución:', err);
-        return resolve({ success: false, message: 'Error al iniciar transacción.' });
+      if (!prestamo) {
+        return resolve({ success: false, message: 'Préstamo no encontrado' });
       }
 
-      try {
-        // 1. Actualizar la fecha de devolución en el préstamo
-        const updatePrestamoResult = await new Promise((res, rej) => {
+      // 2. Parsear libros actuales
+      const librosActuales = JSON.parse(prestamo.librosJson);
+      const librosRestantes = librosActuales.filter(libro => 
+        !librosDevueltosIds.includes(libro.id)
+      );
+
+      // 3. Actualizar libros prestados
+      await new Promise((res, rej) => {
+        db.run(
+          'UPDATE books SET prestados = prestados - 1 WHERE id IN (' + 
+          librosDevueltosIds.map(() => '?').join(',') + ')',
+          librosDevueltosIds,
+          (err) => err ? rej(err) : res(true)
+        );
+      });
+
+      // 4. Si quedan libros, actualizar el préstamo
+      if (librosRestantes.length > 0) {
+        await new Promise((res, rej) => {
           db.run(
-            `UPDATE prestamos SET fechaDevolucion = ? WHERE id = ?`,
-            [fechaDevolucion, prestamoId],
-            function (err) {
-              if (err) {
-                rej(err);
-              } else {
-                res({ success: true, changes: this.changes });
-              }
-            }
+            'UPDATE prestamos SET librosJson = ? WHERE id = ?',
+            [JSON.stringify(librosRestantes), prestamoId],
+            (err) => err ? rej(err) : res(true)
           );
         });
-
-        // 2. Decrementar el contador 'prestados' para cada libro devuelto
-        for (const libroId of librosDevueltosIds) {
-          await new Promise((res, rej) => {
-            db.run(
-              `UPDATE books SET prestados = prestados - 1 WHERE id = ? AND prestados > 0`, // Asegura que no baje de 0
-              [libroId],
-              function (err) {
-                if (err) {
-                  rej(err);
-                } else {
-                  res({ success: true, changes: this.changes });
-                }
-              }
-            );
-          });
-        }
-
-        db.run('COMMIT;', function (err) {
-          if (err) {
-            console.error('Error al confirmar transacción de devolución:', err);
-            db.run('ROLLBACK;');
-            resolve({ success: false, message: 'Error al confirmar devolución.' });
-          } else {
-            resolve({ success: true });
-          }
+      } else {
+        // Si no quedan libros, marcar como devuelto
+        await new Promise((res, rej) => {
+          db.run(
+            'UPDATE prestamos SET fechaDevolucion = ?, librosJson = ? WHERE id = ?',
+            [fechaDevolucion, JSON.stringify([]), prestamoId],
+            (err) => err ? rej(err) : res(true)
+          );
         });
-
-      } catch (error) {
-        console.error('Error durante la transacción de devolución:', error);
-        db.run('ROLLBACK;');
-        resolve({ success: false, message: error.message || 'Error al procesar la devolución.' });
       }
-    });
+
+      resolve({ success: true, message: 'Devolución registrada' });
+    } catch (error) {
+      console.error('Error en devolución parcial:', error);
+      resolve({ success: false, message: 'Error al procesar devolución' });
+    }
   });
 });
 
@@ -436,5 +435,27 @@ process.on('exit', () => {
     } else {
       console.log('❌ Base de datos desconectada.');
     }
+  });
+});
+
+ipcMain.handle('updatePrestamo', async (event, data) => {
+  return new Promise((resolve, reject) => {
+    const { id, userId, fechaPrestamo, libros } = data;
+    
+    db.run(
+      `UPDATE prestamos SET 
+        fechaPrestamo = ?,
+        librosJson = ?
+      WHERE id = ?`,
+      [fechaPrestamo, JSON.stringify(libros), id],
+      function(err) {
+        if (err) {
+          console.error('Error al actualizar préstamo:', err);
+          resolve({ success: false, message: err.message });
+        } else {
+          resolve({ success: true, changes: this.changes });
+        }
+      }
+    );
   });
 });

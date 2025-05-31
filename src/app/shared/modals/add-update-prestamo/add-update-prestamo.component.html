@@ -6,28 +6,49 @@
   </ion-buttons>
 </app-header>
 
-<ion-content [fullscreen]="true" class="ion-padding"> <div class="form-wrapper">
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="form-wrapper">
     <form class="prestamo-form" [formGroup]="prestamoForm" (ngSubmit)="confirmarPrestamo()">
 
-      <ion-item fill="outline" class="form-item-spacing">
-  <ion-label position="floating">Usuario</ion-label>
-  <ion-select placeholder="Selecciona un Usuario"
-              formControlName="usuarioId"
-              interface="popover"
-              [interfaceOptions]="{cssClass: 'custom-select-popover'}"
-              (ionChange)="onUsuarioSelected($event)">
-    <ion-select-option *ngFor="let usuario of usuarios" [value]="usuario.id">
-      {{ usuario.nombres }} {{ usuario.apellidos }} ({{ usuario.cedula }})
-    </ion-select-option>
-  </ion-select>
-</ion-item>
-      <ion-text color="danger" *ngIf="prestamoForm.get('usuarioId')?.touched && prestamoForm.get('usuarioId')?.errors?.['required']">
-        <p class="error-message ion-padding-start">El usuario es requerido</p>
-      </ion-text>
+      <!-- Campo de Usuario - Versión condicional -->
+      <ng-container *ngIf="prestamo; else nuevoUsuario">
+        <!-- Modo Edición (solo lectura) -->
+        <ion-item fill="outline" class="form-item-spacing">
+          <ion-label position="floating">Usuario</ion-label>
+          <ion-input [value]="getUsuarioNombre()" readonly></ion-input>
+        </ion-item>
+      </ng-container>
 
-      <ion-item fill="outline" class="form-item-spacing"> <ion-label position="floating">Agregar Libro</ion-label>
-        <ion-select placeholder="Agregar Libro (Máx. 3)" (ionChange)="addBookToPrestamo($event)" interface="popover" [interfaceOptions]="{cssClass: 'custom-select-popover'}">
-          <ion-select-option *ngFor="let book of books" [value]="book.id">{{ book.titulo }} ({{ book.codigo }})</ion-select-option>
+      <ng-template #nuevoUsuario>
+        <!-- Modo Nuevo (selección) -->
+        <ion-item fill="outline" class="form-item-spacing">
+          <ion-label position="floating">Usuario</ion-label>
+          <ion-select 
+            formControlName="usuarioId"
+            placeholder="Selecciona un Usuario"
+            interface="popover"
+            [interfaceOptions]="{cssClass: 'custom-select-popover'}">
+            <ion-select-option *ngFor="let usuario of usuarios" [value]="usuario.id">
+              {{ usuario.nombres }} {{ usuario.apellidos }} ({{ usuario.cedula }})
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-text color="danger" *ngIf="prestamoForm.get('usuarioId')?.touched && prestamoForm.get('usuarioId')?.errors?.['required']">
+          <p class="error-message ion-padding-start">El usuario es requerido</p>
+        </ion-text>
+      </ng-template>
+
+      <!-- Resto del formulario (sin cambios) -->
+      <ion-item fill="outline" class="form-item-spacing">
+        <ion-label position="floating">Agregar Libro</ion-label>
+        <ion-select 
+          placeholder="Agregar Libro (Máx. 3)" 
+          (ionChange)="addBookToPrestamo($event)" 
+          interface="popover" 
+          [interfaceOptions]="{cssClass: 'custom-select-popover'}">
+          <ion-select-option *ngFor="let book of books" [value]="book.id">
+            {{ book.titulo }} ({{ book.codigo }})
+          </ion-select-option>
         </ion-select>
       </ion-item>
 
@@ -35,7 +56,8 @@
         <ion-list-header>
           <ion-label>Libros Seleccionados:</ion-label>
         </ion-list-header>
-        <ion-item *ngFor="let book of selectedBooks" class="selected-book-item"> <ion-label>{{ book.titulo }} ({{ book.codigo }})</ion-label>
+        <ion-item *ngFor="let book of selectedBooks" class="selected-book-item">
+          <ion-label>{{ book.titulo }} ({{ book.codigo }})</ion-label>
           <ion-button slot="end" color="danger" (click)="removeBookFromPrestamo(book)">
             <ion-icon name="close-circle-outline"></ion-icon>
           </ion-button>
@@ -45,7 +67,8 @@
         <p class="error-message ion-padding-start">Debe seleccionar al menos un libro.</p>
       </ion-text>
     
-      <ion-item fill="outline" class="form-item-spacing"> <ion-label position="floating">Fecha de Préstamo</ion-label>
+      <ion-item fill="outline" class="form-item-spacing">
+        <ion-label position="floating">Fecha de Préstamo</ion-label>
         <ion-datetime-button datetime="fechaPrestamoPicker"></ion-datetime-button>
       </ion-item>
       <ion-modal [keepContentsMounted]="true">
@@ -63,7 +86,11 @@
         <p class="error-message ion-padding-start">La fecha de préstamo es requerida.</p>
       </ion-text>
 
-      <ion-button expand="block" type="submit" [disabled]="prestamoForm.invalid || selectedBooks.length === 0 || selectedBooks.length > 3 || isProcessing" color="tertiary">
+      <ion-button 
+        expand="block" 
+        type="submit" 
+        [disabled]="prestamoForm.invalid || selectedBooks.length === 0 || selectedBooks.length > 3 || isProcessing" 
+        color="tertiary">
         {{prestamo ? 'Actualizar Préstamo' : 'Registrar Préstamo'}}
       </ion-button>
     </form>

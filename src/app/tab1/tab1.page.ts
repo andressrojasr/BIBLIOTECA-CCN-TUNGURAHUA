@@ -210,4 +210,18 @@ export class Tab1Page implements OnInit {
     });
     toast.present();
   }
+
+  async editarPrestamo(prestamo: Prestamo) {
+  const response = await this.utils.presentModal({
+    component: AddUpdatePrestamoComponent,
+    cssClass: 'modal-fullscreen',
+    componentProps: {
+      prestamo: prestamo
+    }
+  });
+
+  if (response && response.success) {
+    this.loadPrestamos();
+  }
+}
 }

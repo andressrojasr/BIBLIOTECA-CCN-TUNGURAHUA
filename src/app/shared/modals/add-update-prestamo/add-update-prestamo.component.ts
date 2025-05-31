@@ -1,4 +1,3 @@
-// src/app/shared/modals/add-update-prestamo/add-update-prestamo.component.ts
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -80,26 +79,50 @@ export class AddUpdatePrestamoComponent implements OnInit {
   }
 
   async loadUsers() {
-    try {
-      const result = await (window as any).electronAPI.getUsuarios();
-      if (result.success) {
-        this.usuarios = result.users;
-        console.log('✅ Usuarios cargados desde Electron:', this.usuarios);
-      } else {
-        console.error('❌ Error cargando usuarios desde Electron (success: false):', result.message);
+  try {
+    const result = await (window as any).electronAPI.getUsuarios();
+    if (result.success) {
+      this.usuarios = result.users;
+      console.log('✅ Usuarios cargados:', this.usuarios);
+      
+      if (this.prestamo) {
+        // Buscar el usuario específico del préstamo
+        const usuarioPrestamo = this.usuarios.find(u => u.id === this.prestamo?.usuarioId);
+        if (usuarioPrestamo) {
+          console.log('Usuario encontrado:', usuarioPrestamo);
+          this.prestamoForm.patchValue({
+            usuarioId: this.prestamo.usuarioId
+          });
+        } else {
+          console.warn('Usuario no encontrado para el préstamo');
+        }
       }
-    } catch (error) {
-      console.error('❌ Error cargando usuarios desde Electron:', error);
     }
+  } catch (error) {
+    console.error('Error cargando usuarios:', error);
+    this.presentToast('Error al cargar usuarios', 'danger');
   }
+}
+
+getUsuarioNombre(): string {
+  if (this.prestamo) {
+    const usuario = this.usuarios.find(u => u.id === this.prestamo?.usuarioId);
+    if (!usuario) {
+      console.warn('Usuario no encontrado en getUsuarioNombre()');
+      this.loadUsers(); // Intenta recargar si no se encontró
+    }
+    return usuario ? `${usuario.nombres} ${usuario.apellidos} (${usuario.cedula})` : 'Usuario no encontrado';
+  }
+  return '';
+}
 
   async loadBooks() {
     try {
       const result = await (window as any).electronAPI.getBooks();
-      console.log('Resultado de getBooks en AddUpdatePrestamo:', result); // Agrega este console.log para verificar
+      console.log('Resultado de getBooks en AddUpdatePrestamo:', result);
       if (result.success) {
-        this.books = result.books; // CAMBIADO: de result.data a result.books
-        console.log('Libros cargados para selección:', this.books); // Agrega este console.log para verificar
+        this.books = result.books;
+        console.log('Libros cargados para selección:', this.books);
         if (this.prestamo) {
           this.patchFormWithPrestamoData();
         }
@@ -112,19 +135,23 @@ export class AddUpdatePrestamoComponent implements OnInit {
     }
   }
 
-  onUsuarioSelected(event: any) {
-    console.log('Usuario seleccionado ID:', event.detail.value);
-  }
-
-  addBookToPrestamo(event: any) {
+  async addBookToPrestamo(event: any) {
     const bookId = event.detail.value;
     const selectedBook = this.books.find(b => b.id === bookId);
 
-    if (selectedBook && !this.selectedBooks.some(b => b.id === bookId)) {
-      if (this.selectedBooks.length < 3) {
-        this.selectedBooks.push(selectedBook);
+    if (selectedBook) {
+      const availability = await (window as any).electronAPI.checkBookAvailabilityForPrestamo(bookId);
+      
+      if (availability.success && availability.canLend) {
+        if (!this.selectedBooks.some(b => b.id === bookId)) {
+          if (this.selectedBooks.length < 3) {
+            this.selectedBooks.push(selectedBook);
+          } else {
+            this.presentToast('Solo se pueden prestar un máximo de 3 libros.', 'warning');
+          }
+        }
       } else {
-        this.presentToast('Solo se pueden prestar un máximo de 3 libros.', 'warning');
+        this.presentToast(availability.message || 'No hay ejemplares disponibles de este libro', 'warning');
       }
     }
     event.target.value = undefined;
@@ -145,7 +172,7 @@ export class AddUpdatePrestamoComponent implements OnInit {
     const libroIds = this.selectedBooks.map(book => book.id);
 
     const prestamoData = {
-      userId: formValue.usuarioId,
+      userId: this.prestamo ? this.prestamo.usuarioId : formValue.usuarioId,
       libros: this.selectedBooks.map(book => ({ id: book.id, titulo: book.titulo, codigo: book.codigo })),
       fechaPrestamo: formValue.fechaPrestamo
     };
@@ -185,4 +212,6 @@ export class AddUpdatePrestamoComponent implements OnInit {
   closeModal() {
     this.modalCtrl.dismiss(false);
   }
+
+  
 }
