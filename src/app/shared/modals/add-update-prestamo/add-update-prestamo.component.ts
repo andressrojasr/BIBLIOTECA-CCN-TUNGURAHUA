@@ -37,6 +37,7 @@ export class AddUpdatePrestamoComponent implements OnInit {
   selectedBooks: Book[] = [];
   isProcessing: boolean = false;
   currentDate: string = new Date().toISOString();
+  usuarioNombre: string = '';
 
   constructor(
     private modalCtrl: ModalController,
@@ -46,11 +47,28 @@ export class AddUpdatePrestamoComponent implements OnInit {
     this.initForm();
   }
 
-  ngOnInit() {
-    this.loadUsers();
-    this.loadBooks();
+  async ngOnInit() {
+    console.log('🔄 Iniciando AddUpdatePrestamoComponent');
+    console.log('📋 Prestamo recibido:', this.prestamo);
+    
     if (this.prestamo) {
       this.title = 'Actualizar Préstamo';
+      this.usuarioNombre = 'Cargando usuario...';
+      
+      // Cargar usuarios y libros en paralelo
+      await Promise.all([
+        this.loadUsers(),
+        this.loadBooks()
+      ]);
+      
+      // Una vez cargados los datos, actualizar el formulario
+      this.patchFormWithPrestamoData();
+      this.updateUsuarioNombre();
+    } else {
+      await Promise.all([
+        this.loadUsers(),
+        this.loadBooks()
+      ]);
     }
   }
 
@@ -61,72 +79,78 @@ export class AddUpdatePrestamoComponent implements OnInit {
     });
   }
 
-  async patchFormWithPrestamoData() {
+  patchFormWithPrestamoData() {
     if (this.prestamo && this.books.length > 0) {
+      console.log('📝 Aplicando datos del préstamo al formulario');
+      
       this.prestamoForm.patchValue({
         usuarioId: this.prestamo.usuarioId,
         fechaPrestamo: this.prestamo.fechaPrestamo
       });
 
-      if (this.prestamo.libros) {
+      // Mapear los libros seleccionados
+      if (this.prestamo.libros && Array.isArray(this.prestamo.libros)) {
         this.selectedBooks = this.prestamo.libros
-          .map((prestamoLibro: PrestamoLibro) =>
-            this.books.find(book => book.id === prestamoLibro.id)
-          )
+          .map((prestamoLibro: PrestamoLibro) => {
+            const book = this.books.find(book => book.id === prestamoLibro.id);
+            console.log(`🔍 Buscando libro ID ${prestamoLibro.id}:`, book ? 'Encontrado' : 'No encontrado');
+            return book;
+          })
           .filter((book): book is Book => book !== undefined);
+        
+        console.log('📚 Libros seleccionados mapeados:', this.selectedBooks);
+      }
+    }
+  }
+
+  updateUsuarioNombre(): void {
+    if (this.prestamo && this.usuarios.length > 0) {
+      console.log('👤 Actualizando nombre de usuario');
+      console.log('🔍 Buscando usuario con ID:', this.prestamo.usuarioId);
+      console.log('📋 Usuarios disponibles:', this.usuarios.map(u => ({ id: u.id, nombres: u.nombres, apellidos: u.apellidos })));
+      
+      const usuario = this.usuarios.find(u => u.id === this.prestamo?.usuarioId);
+      
+      if (usuario) {
+        this.usuarioNombre = `${usuario.nombres} ${usuario.apellidos} (${usuario.cedula})`;
+        console.log('✅ Usuario encontrado:', this.usuarioNombre);
+      } else {
+        this.usuarioNombre = 'Usuario no encontrado';
+        console.error('❌ Usuario no encontrado para ID:', this.prestamo.usuarioId);
       }
     }
   }
 
   async loadUsers() {
-  try {
-    const result = await (window as any).electronAPI.getUsuarios();
-    if (result.success) {
-      this.usuarios = result.users;
-      console.log('✅ Usuarios cargados:', this.usuarios);
-      
-      if (this.prestamo) {
-        // Buscar el usuario específico del préstamo
-        const usuarioPrestamo = this.usuarios.find(u => u.id === this.prestamo?.usuarioId);
-        if (usuarioPrestamo) {
-          console.log('Usuario encontrado:', usuarioPrestamo);
-          this.prestamoForm.patchValue({
-            usuarioId: this.prestamo.usuarioId
-          });
-        } else {
-          console.warn('Usuario no encontrado para el préstamo');
-        }
+    try {
+      console.log('👥 Cargando usuarios...');
+      const result = await (window as any).electronAPI.getUsuarios();
+      if (result.success) {
+        this.usuarios = result.users;
+        console.log('✅ Usuarios cargados:', this.usuarios.length);
+        console.log('📋 Primeros usuarios:', this.usuarios.slice(0, 3).map(u => ({ id: u.id, nombres: u.nombres, apellidos: u.apellidos })));
+      } else {
+        console.error('❌ Error al cargar usuarios:', result.message);
+        this.presentToast('Error al cargar usuarios: ' + result.message, 'danger');
       }
+    } catch (error) {
+      console.error('❌ Error cargando usuarios:', error);
+      this.presentToast('Error al cargar usuarios', 'danger');
+      this.usuarioNombre = 'Error al cargar usuario';
     }
-  } catch (error) {
-    console.error('Error cargando usuarios:', error);
-    this.presentToast('Error al cargar usuarios', 'danger');
   }
-}
-
-getUsuarioNombre(): string {
-  if (this.prestamo) {
-    const usuario = this.usuarios.find(u => u.id === this.prestamo?.usuarioId);
-    if (!usuario) {
-      console.warn('Usuario no encontrado en getUsuarioNombre()');
-      this.loadUsers(); // Intenta recargar si no se encontró
-    }
-    return usuario ? `${usuario.nombres} ${usuario.apellidos} (${usuario.cedula})` : 'Usuario no encontrado';
-  }
-  return '';
-}
 
   async loadBooks() {
     try {
+      console.log('📚 Cargando libros...');
       const result = await (window as any).electronAPI.getBooks();
-      console.log('Resultado de getBooks en AddUpdatePrestamo:', result);
+      console.log('📚 Resultado de getBooks en AddUpdatePrestamo:', result);
+      
       if (result.success) {
         this.books = result.books;
-        console.log('Libros cargados para selección:', this.books);
-        if (this.prestamo) {
-          this.patchFormWithPrestamoData();
-        }
+        console.log('✅ Libros cargados:', this.books.length);
       } else {
+        console.error('❌ Error al cargar libros:', result.message);
         this.presentToast('Error al cargar libros: ' + result.message, 'danger');
       }
     } catch (error) {
@@ -169,7 +193,6 @@ getUsuarioNombre(): string {
 
     this.isProcessing = true;
     const formValue = this.prestamoForm.value;
-    const libroIds = this.selectedBooks.map(book => book.id);
 
     const prestamoData = {
       userId: this.prestamo ? this.prestamo.usuarioId : formValue.usuarioId,
@@ -177,16 +200,23 @@ getUsuarioNombre(): string {
       fechaPrestamo: formValue.fechaPrestamo
     };
 
+    console.log('💾 Datos a enviar:', prestamoData);
+
     try {
       let result;
       if (this.prestamo && this.prestamo.id) {
+        console.log('🔄 Actualizando préstamo ID:', this.prestamo.id);
         result = await (window as any).electronAPI.updatePrestamo({ ...prestamoData, id: this.prestamo.id });
       } else {
+        console.log('➕ Creando nuevo préstamo');
         result = await (window as any).electronAPI.insertPrestamo(prestamoData);
       }
 
       if (result.success) {
-        this.presentToast(result.message, 'success');
+        this.presentToast(
+          this.prestamo ? 'Préstamo actualizado correctamente' : 'Préstamo registrado correctamente', 
+          'success'
+        );
         this.modalCtrl.dismiss(true);
       } else {
         this.presentToast('Error al registrar/actualizar el préstamo: ' + result.message, 'danger');
@@ -212,6 +242,4 @@ getUsuarioNombre(): string {
   closeModal() {
     this.modalCtrl.dismiss(false);
   }
-
-  
 }

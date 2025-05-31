@@ -253,6 +253,7 @@ ipcMain.handle('insertPrestamo', async (event, data) => {
   });
 });
 
+// Reemplaza la función getPrestamos en main.js (líneas aproximadamente 201-245)
 ipcMain.handle('getPrestamos', async () => {
   return new Promise((resolve, reject) => {
     const query = `
@@ -286,12 +287,13 @@ ipcMain.handle('getPrestamos', async () => {
             id: row.prestamoId,
             fechaPrestamo: row.fechaPrestamo,
             fechaDevolucion: row.fechaDevolucion,
-            userId: row.usuarioId,
-            usuarioNombres: row.usuarioNombres, // CORRECTO: usa usuarioNombres
-            usuarioApellidos: row.usuarioApellidos, // CORRECTO: usa usuarioApellidos
+            usuarioId: row.usuarioId, // ✅ CORREGIDO: era userId, ahora es usuarioId
+            usuarioNombres: row.usuarioNombres,
+            usuarioApellidos: row.usuarioApellidos,
             libros: librosParsed,
           };
         });
+        console.log('✅ Préstamos mapeados:', prestamos.map(p => ({ id: p.id, usuarioId: p.usuarioId, libros: p.libros.length })));
         resolve({ success: true, prestamos: prestamos });
       }
     });
@@ -359,6 +361,7 @@ ipcMain.handle('devolverLibrosParcial', async (event, data) => {
   });
 });
 
+// Reemplaza la función getHistorialDevoluciones en main.js (líneas aproximadamente 320-365)
 ipcMain.handle('getHistorialDevoluciones', async (event) => {
   return new Promise((resolve, reject) => {
     const query = `
@@ -392,12 +395,13 @@ ipcMain.handle('getHistorialDevoluciones', async (event) => {
             id: row.prestamoId,
             fechaPrestamo: row.fechaPrestamo,
             fechaDevolucion: row.fechaDevolucion,
-            userId: row.usuarioId,
-            usuarioNombres: row.usuarioNombres, // CORRECTO: usa usuarioNombres
-            usuarioApellidos: row.usuarioApellidos, // CORRECTO: usa usuarioApellidos
+            usuarioId: row.usuarioId, // ✅ CORREGIDO: era userId, ahora es usuarioId
+            usuarioNombres: row.usuarioNombres,
+            usuarioApellidos: row.usuarioApellidos,
             libros: librosParsed,
           };
         });
+        console.log('✅ Historial mapeado:', historial.map(h => ({ id: h.id, usuarioId: h.usuarioId, libros: h.libros.length })));
         resolve({ success: true, historial: historial });
       }
     });
@@ -438,24 +442,150 @@ process.on('exit', () => {
   });
 });
 
+// Handler mejorado para updatePrestamo en main.js
 ipcMain.handle('updatePrestamo', async (event, data) => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const { id, userId, fechaPrestamo, libros } = data;
     
-    db.run(
-      `UPDATE prestamos SET 
-        fechaPrestamo = ?,
-        librosJson = ?
-      WHERE id = ?`,
-      [fechaPrestamo, JSON.stringify(libros), id],
-      function(err) {
-        if (err) {
-          console.error('Error al actualizar préstamo:', err);
-          resolve({ success: false, message: err.message });
-        } else {
-          resolve({ success: true, changes: this.changes });
-        }
+    console.log('🔄 Actualizando préstamo ID:', id);
+    console.log('📋 Nuevos datos:', { userId, fechaPrestamo, libros: libros.length });
+
+    // Iniciar transacción para manejar la actualización de forma segura
+    db.run('BEGIN TRANSACTION;', async function (err) {
+      if (err) {
+        console.error('❌ Error al iniciar transacción:', err);
+        return resolve({ success: false, message: 'Error al iniciar transacción.' });
       }
-    );
+
+      try {
+        // 1. Obtener el préstamo actual para comparar los libros
+        const prestamoActual = await new Promise((res, rej) => {
+          db.get('SELECT librosJson FROM prestamos WHERE id = ?', [id], (err, row) => {
+            if (err) rej(err);
+            else res(row);
+          });
+        });
+
+        if (!prestamoActual) {
+          db.run('ROLLBACK;');
+          return resolve({ success: false, message: 'Préstamo no encontrado.' });
+        }
+
+        // 2. Parsear libros actuales y nuevos
+        const librosAnteriores = JSON.parse(prestamoActual.librosJson || '[]');
+        const librosNuevos = libros;
+
+        console.log('📚 Libros anteriores:', librosAnteriores.map(l => l.id));
+        console.log('📚 Libros nuevos:', librosNuevos.map(l => l.id));
+
+        // 3. Identificar libros que se removieron y agregaron
+        const librosRemovidosIds = librosAnteriores
+          .filter(libroAnterior => !librosNuevos.some(libroNuevo => libroNuevo.id === libroAnterior.id))
+          .map(libro => libro.id);
+
+        const librosAgregadosIds = librosNuevos
+          .filter(libroNuevo => !librosAnteriores.some(libroAnterior => libroAnterior.id === libroNuevo.id))
+          .map(libro => libro.id);
+
+        console.log('➖ Libros removidos:', librosRemovidosIds);
+        console.log('➕ Libros agregados:', librosAgregadosIds);
+
+        // 4. Actualizar contadores de libros removidos (disminuir prestados)
+        for (const libroId of librosRemovidosIds) {
+          await new Promise((res, rej) => {
+            db.run(
+              'UPDATE books SET prestados = prestados - 1 WHERE id = ? AND prestados > 0',
+              [libroId],
+              function (err) {
+                if (err) {
+                  console.error('❌ Error al decrementar libro:', err);
+                  rej(err);
+                } else {
+                  console.log('✅ Decrementado libro ID:', libroId);
+                  res(true);
+                }
+              }
+            );
+          });
+        }
+
+        // 5. Verificar disponibilidad y actualizar contadores de libros agregados
+        for (const libroId of librosAgregadosIds) {
+          // Verificar disponibilidad antes de agregar
+          const availability = await new Promise((res, rej) => {
+            db.get('SELECT ejemplares, prestados FROM books WHERE id = ?', [libroId], (err, row) => {
+              if (err) rej(err);
+              else res(row);
+            });
+          });
+
+          if (availability && availability.prestados < 2) { // Límite máximo de 2 préstamos
+            await new Promise((res, rej) => {
+              db.run(
+                'UPDATE books SET prestados = prestados + 1 WHERE id = ?',
+                [libroId],
+                function (err) {
+                  if (err) {
+                    console.error('❌ Error al incrementar libro:', err);
+                    rej(err);
+                  } else {
+                    console.log('✅ Incrementado libro ID:', libroId);
+                    res(true);
+                  }
+                }
+              );
+            });
+          } else {
+            // Si no hay disponibilidad, hacer rollback
+            db.run('ROLLBACK;');
+            return resolve({ 
+              success: false, 
+              message: `No hay ejemplares disponibles del libro ID: ${libroId}` 
+            });
+          }
+        }
+
+        // 6. Actualizar el préstamo con los nuevos datos
+        await new Promise((res, rej) => {
+          db.run(
+            `UPDATE prestamos SET 
+              fechaPrestamo = ?,
+              librosJson = ?
+            WHERE id = ?`,
+            [fechaPrestamo, JSON.stringify(librosNuevos), id],
+            function (err) {
+              if (err) {
+                console.error('❌ Error al actualizar préstamo:', err);
+                rej(err);
+              } else {
+                console.log('✅ Préstamo actualizado, cambios:', this.changes);
+                res({ success: true, changes: this.changes });
+              }
+            }
+          );
+        });
+
+        // 7. Confirmar transacción
+        db.run('COMMIT;', function (err) {
+          if (err) {
+            console.error('❌ Error al confirmar transacción:', err);
+            db.run('ROLLBACK;');
+            resolve({ success: false, message: 'Error al confirmar actualización.' });
+          } else {
+            console.log('✅ Préstamo actualizado correctamente');
+            resolve({ 
+              success: true, 
+              message: 'Préstamo actualizado correctamente',
+              changes: 1 
+            });
+          }
+        });
+
+      } catch (error) {
+        console.error('❌ Error durante la transacción de actualización:', error);
+        db.run('ROLLBACK;');
+        resolve({ success: false, message: error.message || 'Error al actualizar el préstamo.' });
+      }
+    });
   });
 });

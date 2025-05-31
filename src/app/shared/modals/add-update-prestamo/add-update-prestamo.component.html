@@ -10,17 +10,14 @@
   <div class="form-wrapper">
     <form class="prestamo-form" [formGroup]="prestamoForm" (ngSubmit)="confirmarPrestamo()">
 
-      <!-- Campo de Usuario - Versión condicional -->
       <ng-container *ngIf="prestamo; else nuevoUsuario">
-        <!-- Modo Edición (solo lectura) -->
         <ion-item fill="outline" class="form-item-spacing">
           <ion-label position="floating">Usuario</ion-label>
-          <ion-input [value]="getUsuarioNombre()" readonly></ion-input>
+          <ion-input [value]="usuarioNombre" readonly></ion-input>
         </ion-item>
       </ng-container>
 
       <ng-template #nuevoUsuario>
-        <!-- Modo Nuevo (selección) -->
         <ion-item fill="outline" class="form-item-spacing">
           <ion-label position="floating">Usuario</ion-label>
           <ion-select 
@@ -38,7 +35,6 @@
         </ion-text>
       </ng-template>
 
-      <!-- Resto del formulario (sin cambios) -->
       <ion-item fill="outline" class="form-item-spacing">
         <ion-label position="floating">Agregar Libro</ion-label>
         <ion-select 
