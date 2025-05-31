@@ -1,8 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { IonicModule, ModalController, ToastController } from '@ionic/angular';
-import { HeaderComponent } from '../../components/header/header.component'; // <-- ¡AÑADIDA ESTA LÍNEA!
-// ELIMINAR ESTA LÍNEA: import { SharedModule } from '../../shared.module'; // NO DEBE IMPORTARSE AQUÍ SI ES STANDALONE
+import { HeaderComponent } from '../../components/header/header.component';
+
+// Interfaz para el historial de devoluciones
+interface HistorialDevolucion {
+  id: number;
+  tituloLibro: string;
+  codigoLibro: string;
+  usuarioNombres: string;
+  usuarioApellidos: string;
+  fechaPrestamo: string;
+  fechaDevolucion: string;
+}
 
 @Component({
   selector: 'app-historial-devoluciones',
@@ -11,12 +22,15 @@ import { HeaderComponent } from '../../components/header/header.component'; // <
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     IonicModule,
-    HeaderComponent, // <-- ¡AÑADIDA ESTA LÍNEA y reemplaza a SharedModule!
+    HeaderComponent,
   ],
 })
 export class HistorialDevolucionesComponent implements OnInit {
-  historial: any[] = [];
+  historial: HistorialDevolucion[] = [];
+  filteredHistorial: HistorialDevolucion[] = [];
+  searchTerm: string = '';
   isProcessing: boolean = false;
 
   constructor(
@@ -31,16 +45,59 @@ export class HistorialDevolucionesComponent implements OnInit {
   async loadHistorialDevoluciones() {
     this.isProcessing = true;
     try {
-      this.historial = await (window as any).electronAPI.getHistorialDevoluciones();
+      const result = await (window as any).electronAPI.getHistorialDevoluciones();
+      
+      if (result && result.success) {
+        this.historial = result.historial || [];
+        console.log('✅ Historial cargado:', this.historial);
+      } else if (Array.isArray(result)) {
+        // Si el resultado es directamente un array (compatibilidad)
+        this.historial = result;
+      } else {
+        this.historial = [];
+        this.presentToast(result?.message || 'No se pudo cargar el historial.', 'warning');
+      }
+      
+      this.filterHistorial();
+      
       if (this.historial.length === 0) {
-        this.presentToast('No hay historial de devoluciones.', 'info');
+        console.log('ℹ️ No hay historial de devoluciones disponible');
       }
     } catch (error) {
-      console.error('Error al cargar historial de devoluciones:', error);
+      console.error('❌ Error al cargar historial de devoluciones:', error);
+      this.historial = [];
+      this.filteredHistorial = [];
       this.presentToast('Error al cargar el historial de devoluciones.', 'danger');
     } finally {
       this.isProcessing = false;
     }
+  }
+
+  filterHistorial() {
+    const searchTerm = this.searchTerm.toLowerCase().trim();
+    
+    if (searchTerm === '') {
+      this.filteredHistorial = [...this.historial];
+    } else {
+      this.filteredHistorial = this.historial.filter(item => {
+        // Búsqueda por nombre del usuario
+        const userMatch = (item.usuarioNombres?.toLowerCase().includes(searchTerm) || false) ||
+                         (item.usuarioApellidos?.toLowerCase().includes(searchTerm) || false);
+        
+        // Búsqueda por título del libro
+        const bookTitleMatch = item.tituloLibro?.toLowerCase().includes(searchTerm) || false;
+        
+        // Búsqueda por código del libro
+        const bookCodeMatch = item.codigoLibro?.toLowerCase().includes(searchTerm) || false;
+        
+        // Búsqueda por nombre completo del usuario
+        const fullNameMatch = `${item.usuarioNombres} ${item.usuarioApellidos}`.toLowerCase().includes(searchTerm);
+        
+        return userMatch || bookTitleMatch || bookCodeMatch || fullNameMatch;
+      });
+    }
+    
+    console.log(`🔍 Búsqueda: "${searchTerm}" - Resultados: ${this.filteredHistorial.length}/${this.historial.length}`);
   }
 
   async presentToast(message: string, color: string) {
@@ -48,11 +105,23 @@ export class HistorialDevolucionesComponent implements OnInit {
       message: message,
       duration: 3000,
       color: color,
+      position: 'top'
     });
-    toast.present();
+    await toast.present();
   }
 
   cancel() {
     this.modalCtrl.dismiss();
+  }
+
+  // Método adicional para limpiar la búsqueda
+  clearSearch() {
+    this.searchTerm = '';
+    this.filterHistorial();
+  }
+
+  // Método para refrescar el historial
+  async refreshHistorial() {
+    await this.loadHistorialDevoluciones();
   }
 }
