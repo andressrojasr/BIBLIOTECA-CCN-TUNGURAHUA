@@ -1,47 +1,23 @@
-/* src/app/shared/modals/atrasos/atrasos.component.scss */
-
-ion-content {
-  --background: var(--ion-background-color, #f0f2f5);
-  color: var(--ion-color-step-850, #000);
-}
-
+// atrasos.component.scss
 .content-wrapper {
   padding: 16px;
-  max-width: 100%;
 }
 
 .summary-card {
   margin-bottom: 20px;
   
   ion-card {
-    --background: white;
-    border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
     
     ion-card-header {
-      padding-bottom: 0;
-      
       ion-card-title {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 1.2em;
-        font-weight: 600;
         
         ion-icon {
-          font-size: 1.4em;
-        }
-      }
-    }
-    
-    ion-card-content {
-      p {
-        margin: 8px 0;
-        font-size: 0.95em;
-        color: var(--ion-color-step-700, #333);
-        
-        strong {
-          color: var(--ion-color-step-850, #000);
+          font-size: 24px;
         }
       }
     }
@@ -49,104 +25,55 @@ ion-content {
 }
 
 .prestamos-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.prestamo-card {
-  --background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid var(--ion-color-danger);
-  
-  ion-card-header {
-    padding-bottom: 12px;
+  .prestamo-card {
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    border-left: 4px solid var(--ion-color-danger);
     
     .user-info {
-      ion-card-title {
-        font-size: 1.3em;
-        font-weight: 600;
-        color: var(--ion-color-step-850, #000);
-        margin-bottom: 8px;
-      }
-      
-      ion-card-subtitle {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        color: var(--ion-color-step-600, #666);
-        font-size: 0.9em;
-        margin-bottom: 12px;
-        
-        ion-icon {
-          font-size: 1.1em;
-        }
-      }
-      
       .days-chip {
-        --background: var(--ion-color-danger);
-        --color: white;
-        font-weight: 600;
+        margin-top: 8px;
         
         ion-icon {
           margin-right: 4px;
         }
       }
     }
-  }
-  
-  ion-card-content {
-    padding-top: 0;
     
     .books-section {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       
       h4 {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin: 0 0 12px 0;
-        font-size: 1.1em;
-        font-weight: 600;
-        color: var(--ion-color-step-800, #222);
+        margin-bottom: 12px;
+        color: var(--ion-color-medium);
         
         ion-icon {
-          color: var(--ion-color-primary);
-          font-size: 1.2em;
+          font-size: 20px;
         }
       }
       
       .books-list {
-        background: var(--ion-color-light, #f8f9fa);
+        background: var(--ion-color-light);
         border-radius: 8px;
-        padding: 0;
-        margin: 0;
         
         .book-item {
-          --background: transparent;
-          --border-color: transparent;
-          --inner-padding-end: 16px;
-          --inner-padding-start: 16px;
-          --padding-top: 12px;
-          --padding-bottom: 12px;
-          
-          &:not(:last-child) {
-            border-bottom: 1px solid var(--ion-color-step-100, #e0e0e0);
-          }
+          --padding-start: 12px;
+          --padding-end: 12px;
+          --min-height: 50px;
           
           ion-label {
             h3 {
-              margin: 0 0 4px 0;
-              font-size: 1em;
-              font-weight: 500;
-              color: var(--ion-color-step-850, #000);
+              font-weight: 600;
+              margin-bottom: 4px;
             }
             
             p {
-              margin: 0;
-              font-size: 0.85em;
-              color: var(--ion-color-step-600, #666);
+              color: var(--ion-color-medium);
+              font-size: 14px;
             }
           }
         }
@@ -154,13 +81,12 @@ ion-content {
     }
     
     .actions-section {
+      margin-top: 16px;
+      
       ion-button {
         --border-radius: 8px;
+        height: 44px;
         font-weight: 600;
-        
-        ion-icon {
-          margin-right: 8px;
-        }
       }
     }
   }
@@ -170,98 +96,63 @@ ion-content {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 50vh;
+  min-height: 60vh;
   
   ion-card {
-    --background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
     width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
     
     ion-card-content {
-      padding: 40px 20px;
+      padding: 32px 24px;
       
       ion-icon {
-        font-size: 4em;
+        font-size: 64px;
         margin-bottom: 16px;
       }
       
       h2 {
-        margin: 0 0 12px 0;
-        font-size: 1.5em;
-        font-weight: 600;
-        color: var(--ion-color-step-850, #000);
+        color: var(--ion-color-success);
+        margin-bottom: 12px;
+        font-weight: 700;
       }
       
       p {
-        margin: 8px 0;
-        color: var(--ion-color-step-700, #333);
-        
-        &.subtitle {
-          font-size: 0.9em;
-          color: var(--ion-color-step-600, #666);
-        }
+        margin-bottom: 8px;
+        line-height: 1.5;
+      }
+      
+      .subtitle {
+        color: var(--ion-color-medium);
+        font-size: 14px;
       }
     }
   }
 }
 
-// Responsive design
+// Responsive adjustments
 @media (max-width: 768px) {
   .content-wrapper {
     padding: 12px;
   }
   
-  .prestamo-card {
-    ion-card-header {
-      .user-info {
-        ion-card-title {
-          font-size: 1.2em;
-        }
-        
-        .days-chip {
-          font-size: 0.8em;
-        }
-      }
-    }
-    
-    ion-card-content {
+  .prestamos-list {
+    .prestamo-card {
       .books-section {
-        h4 {
-          font-size: 1em;
-        }
-        
         .books-list {
           .book-item {
             ion-label {
               h3 {
-                font-size: 0.95em;
+                font-size: 16px;
               }
               
               p {
-                font-size: 0.8em;
+                font-size: 13px;
               }
             }
           }
-        }
-      }
-    }
-  }
-  
-  .no-atrasos {
-    min-height: 40vh;
-    
-    ion-card {
-      ion-card-content {
-        padding: 30px 16px;
-        
-        ion-icon {
-          font-size: 3em;
-        }
-        
-        h2 {
-          font-size: 1.3em;
         }
       }
     }
