@@ -1,0 +1,91 @@
+<app-header title="Préstamos con Atrasos (+30 días)" [isModal]="true">
+  <ion-buttons slot="end">
+    <ion-button (click)="closeModal()">
+      <ion-icon name="close"></ion-icon>
+    </ion-button>
+  </ion-buttons>
+</app-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="content-wrapper">
+    
+    <!-- Información de resumen -->
+    <div class="summary-card" *ngIf="prestamosAtrasados.length > 0">
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title color="danger">
+            <ion-icon name="warning-outline"></ion-icon>
+            Resumen de Atrasos
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p><strong>Total de préstamos atrasados:</strong> {{ prestamosAtrasados.length }}</p>
+          <p><strong>Total de libros:</strong> {{ getTotalLibrosAtrasados() }}</p>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Lista de préstamos atrasados -->
+    <div class="prestamos-list" *ngIf="prestamosAtrasados.length > 0; else noAtrasos">
+      <ion-card *ngFor="let prestamo of prestamosAtrasados" class="prestamo-card">
+        <ion-card-header>
+          <div class="user-info">
+            <ion-card-title>{{ prestamo.usuarioNombres }} {{ prestamo.usuarioApellidos }}</ion-card-title>
+            <ion-card-subtitle>
+              <ion-icon name="calendar-outline"></ion-icon>
+              Prestado el: {{ prestamo.fechaPrestamo | date:'dd/MM/yyyy' }}
+            </ion-card-subtitle>
+            <ion-chip color="danger" class="days-chip">
+              <ion-icon name="time-outline"></ion-icon>
+              <ion-label>{{ getDiasAtraso(prestamo.fechaPrestamo) }} días de atraso</ion-label>
+            </ion-chip>
+          </div>
+        </ion-card-header>
+        
+        <ion-card-content>
+          <div class="books-section">
+            <h4>
+              <ion-icon name="library-outline"></ion-icon>
+              Libros Prestados ({{ prestamo.libros.length }})
+            </h4>
+            <ion-list class="books-list">
+              <ion-item *ngFor="let libro of prestamo.libros" class="book-item">
+                <ion-icon name="book-outline" slot="start" color="medium"></ion-icon>
+                <ion-label>
+                  <h3>{{ libro.titulo }}</h3>
+                  <p>Código: {{ libro.codigo }}</p>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+          </div>
+          
+          <!-- Botón de acción para devolver -->
+          <div class="actions-section">
+            <ion-button 
+              expand="block" 
+              color="primary" 
+              (click)="mostrarDetallesDevolucion(prestamo)">
+              <ion-icon name="arrow-undo-outline" slot="start"></ion-icon>
+              Gestionar Devolución
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Mensaje cuando no hay atrasos -->
+    <ng-template #noAtrasos>
+      <div class="no-atrasos">
+        <ion-card>
+          <ion-card-content class="ion-text-center">
+            <ion-icon name="checkmark-circle-outline" size="large" color="success"></ion-icon>
+            <h2>¡Excelente!</h2>
+            <p>No hay préstamos con más de 30 días de atraso.</p>
+            <p class="subtitle">Todos los préstamos están dentro del tiempo permitido.</p>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </ng-template>
+
+  </div>
+</ion-content>
