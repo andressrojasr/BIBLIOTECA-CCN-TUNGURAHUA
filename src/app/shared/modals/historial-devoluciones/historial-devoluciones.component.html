@@ -26,16 +26,24 @@
       
       <ion-item *ngFor="let item of filteredHistorial" class="historial-item">
         <ion-label class="historial-label">
-          <div class="libro-info">
-            <h2>{{ item.tituloLibro }}</h2>
-            <p class="codigo-libro">Código: {{ item.codigoLibro }}</p>
-          </div>
-          
           <div class="usuario-info">
-            <p class="usuario-nombre">
+            <h2 class="usuario-nombre">
               <ion-icon name="person-outline"></ion-icon>
               {{ item.usuarioNombres }} {{ item.usuarioApellidos }}
-            </p>
+            </h2>
+          </div>
+          
+          <div class="libros-devueltos">
+            <div class="libros-header">
+              <ion-icon name="library-outline"></ion-icon>
+              <span>Libro{{ item.librosDevueltos?.length > 1 ? 's' : '' }} devuelto{{ item.librosDevueltos?.length > 1 ? 's' : '' }}:</span>
+            </div>
+            <div class="libros-list">
+              <div *ngFor="let libro of item.librosDevueltos" class="libro-item">
+                <h3>{{ libro.titulo }}</h3>
+                <p class="codigo-libro">Código: {{ libro.codigo }}</p>
+              </div>
+            </div>
           </div>
           
           <div class="fechas-info">
@@ -46,6 +54,15 @@
             <p class="fecha-devolucion">
               <ion-icon name="checkmark-circle-outline"></ion-icon>
               Devolución: {{ item.fechaDevolucion | date:'dd/MM/yyyy' }}
+            </p>
+          </div>
+          
+          <!-- Información adicional del préstamo -->
+          <div class="prestamo-info" *ngIf="item.totalLibrosPrestamo && item.totalLibrosPrestamo > item.librosDevueltos?.length">
+            <p class="info-prestamo">
+              <ion-icon name="information-circle-outline"></ion-icon>
+              Préstamo original: {{ item.totalLibrosPrestamo }} libro{{ item.totalLibrosPrestamo > 1 ? 's' : '' }}
+              ({{ item.librosDevueltos?.length }} devuelto{{ item.librosDevueltos?.length > 1 ? 's' : '' }} en esta fecha)
             </p>
           </div>
         </ion-label>

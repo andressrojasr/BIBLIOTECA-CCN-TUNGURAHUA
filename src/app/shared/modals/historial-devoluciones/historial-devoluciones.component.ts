@@ -5,14 +5,20 @@ import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 import { HeaderComponent } from '../../components/header/header.component';
 
 // Interfaz para el historial de devoluciones
+interface LibroDevuelto {
+  titulo: string;
+  codigo: string;
+}
+
 interface HistorialDevolucion {
   id: number;
-  tituloLibro: string;
-  codigoLibro: string;
   usuarioNombres: string;
   usuarioApellidos: string;
   fechaPrestamo: string;
   fechaDevolucion: string;
+  librosDevueltos: LibroDevuelto[];
+  totalLibrosPrestamo?: number; // Total de libros en el préstamo original
+  prestamoId?: number; // ID del préstamo original para referencia
 }
 
 @Component({
@@ -84,16 +90,16 @@ export class HistorialDevolucionesComponent implements OnInit {
         const userMatch = (item.usuarioNombres?.toLowerCase().includes(searchTerm) || false) ||
                          (item.usuarioApellidos?.toLowerCase().includes(searchTerm) || false);
         
-        // Búsqueda por título del libro
-        const bookTitleMatch = item.tituloLibro?.toLowerCase().includes(searchTerm) || false;
-        
-        // Búsqueda por código del libro
-        const bookCodeMatch = item.codigoLibro?.toLowerCase().includes(searchTerm) || false;
-        
         // Búsqueda por nombre completo del usuario
         const fullNameMatch = `${item.usuarioNombres} ${item.usuarioApellidos}`.toLowerCase().includes(searchTerm);
         
-        return userMatch || bookTitleMatch || bookCodeMatch || fullNameMatch;
+        // Búsqueda en los libros devueltos
+        const booksMatch = item.librosDevueltos?.some(libro => 
+          libro.titulo?.toLowerCase().includes(searchTerm) ||
+          libro.codigo?.toLowerCase().includes(searchTerm)
+        ) || false;
+        
+        return userMatch || fullNameMatch || booksMatch;
       });
     }
     
