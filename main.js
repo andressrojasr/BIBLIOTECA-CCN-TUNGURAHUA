@@ -304,104 +304,210 @@ ipcMain.handle('devolverLibrosParcial', async (event, data) => {
   return new Promise(async (resolve, reject) => {
     const { prestamoId, librosDevueltosIds, fechaDevolucion } = data;
     
-    try {
-      // 1. Obtener el préstamo actual
-      const prestamo = await new Promise((res, rej) => {
-        db.get('SELECT * FROM prestamos WHERE id = ?', [prestamoId], (err, row) => {
-          if (err) rej(err);
-          else res(row);
-        });
-      });
-
-      if (!prestamo) {
-        return resolve({ success: false, message: 'Préstamo no encontrado' });
+    console.log('🔄 Procesando devolución parcial:', { prestamoId, librosDevueltosIds, fechaDevolucion });
+    
+    // Iniciar transacción
+    db.run('BEGIN TRANSACTION;', async function (err) {
+      if (err) {
+        console.error('❌ Error al iniciar transacción:', err);
+        return resolve({ success: false, message: 'Error al iniciar transacción.' });
       }
 
-      // 2. Parsear libros actuales
-      const librosActuales = JSON.parse(prestamo.librosJson);
-      const librosRestantes = librosActuales.filter(libro => 
-        !librosDevueltosIds.includes(libro.id)
-      );
+      try {
+        // 1. Obtener el préstamo actual
+        const prestamo = await new Promise((res, rej) => {
+          db.get(`
+            SELECT p.*, u.nombres, u.apellidos 
+            FROM prestamos p 
+            JOIN usuarios u ON p.userId = u.id 
+            WHERE p.id = ?
+          `, [prestamoId], (err, row) => {
+            if (err) rej(err);
+            else res(row);
+          });
+        });
 
-      // 3. Actualizar libros prestados
-      await new Promise((res, rej) => {
-        db.run(
-          'UPDATE books SET prestados = prestados - 1 WHERE id IN (' + 
-          librosDevueltosIds.map(() => '?').join(',') + ')',
-          librosDevueltosIds,
-          (err) => err ? rej(err) : res(true)
+        if (!prestamo) {
+          db.run('ROLLBACK;');
+          return resolve({ success: false, message: 'Préstamo no encontrado' });
+        }
+
+        // 2. Parsear libros actuales
+        const librosActuales = JSON.parse(prestamo.librosJson);
+        
+        // 3. Obtener información completa de los libros que se están devolviendo
+        const librosDevueltos = librosActuales.filter(libro => 
+          librosDevueltosIds.includes(libro.id)
         );
-      });
+        
+        console.log('📚 Libros que se devuelven:', librosDevueltos);
 
-      // 4. Si quedan libros, actualizar el préstamo
-      if (librosRestantes.length > 0) {
-        await new Promise((res, rej) => {
-          db.run(
-            'UPDATE prestamos SET librosJson = ? WHERE id = ?',
-            [JSON.stringify(librosRestantes), prestamoId],
-            (err) => err ? rej(err) : res(true)
-          );
+        // 4. Registrar cada libro devuelto en el historial individualmente
+        for (const libro of librosDevueltos) {
+          await new Promise((res, rej) => {
+            db.run(`
+              INSERT INTO historial_devoluciones 
+              (prestamoId, libroId, usuarioId, fechaDevolucion, tituloLibro, codigoLibro, nombreUsuario, apellidoUsuario)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+              prestamoId,
+              libro.id,
+              prestamo.userId,
+              fechaDevolucion,
+              libro.titulo,
+              libro.codigo,
+              prestamo.nombres,
+              prestamo.apellidos
+            ], function (err) {
+              if (err) {
+                console.error('❌ Error al registrar historial:', err);
+                rej(err);
+              } else {
+                console.log('✅ Historial registrado para libro ID:', libro.id);
+                res(true);
+              }
+            });
+          });
+        }
+
+        // 5. Calcular libros restantes
+        const librosRestantes = librosActuales.filter(libro => 
+          !librosDevueltosIds.includes(libro.id)
+        );
+
+        // 6. Actualizar libros prestados en la tabla books
+        for (const libroId of librosDevueltosIds) {
+          await new Promise((res, rej) => {
+            db.run(
+              'UPDATE books SET prestados = prestados - 1 WHERE id = ? AND prestados > 0',
+              [libroId],
+              (err) => {
+                if (err) {
+                  console.error('❌ Error al actualizar contador de préstamos:', err);
+                  rej(err);
+                } else {
+                  console.log('✅ Contador actualizado para libro ID:', libroId);
+                  res(true);
+                }
+              }
+            );
+          });
+        }
+
+        // 7. Actualizar el préstamo
+        if (librosRestantes.length > 0) {
+          // Si quedan libros, actualizar el JSON
+          await new Promise((res, rej) => {
+            db.run(
+              'UPDATE prestamos SET librosJson = ? WHERE id = ?',
+              [JSON.stringify(librosRestantes), prestamoId],
+              (err) => err ? rej(err) : res(true)
+            );
+          });
+          console.log('✅ Préstamo actualizado - quedan', librosRestantes.length, 'libros');
+        } else {
+          // Si no quedan libros, marcar como completamente devuelto
+          await new Promise((res, rej) => {
+            db.run(
+              'UPDATE prestamos SET fechaDevolucion = ?, librosJson = ? WHERE id = ?',
+              [fechaDevolucion, JSON.stringify([]), prestamoId],
+              (err) => err ? rej(err) : res(true)
+            );
+          });
+          console.log('✅ Préstamo completamente devuelto');
+        }
+
+        // 8. Confirmar transacción
+        db.run('COMMIT;', function (err) {
+          if (err) {
+            console.error('❌ Error al confirmar transacción:', err);
+            db.run('ROLLBACK;');
+            resolve({ success: false, message: 'Error al confirmar devolución.' });
+          } else {
+            console.log('✅ Devolución registrada exitosamente');
+            resolve({ 
+              success: true, 
+              message: `Se devolvieron ${librosDevueltos.length} libro(s) correctamente`,
+              librosDevueltos: librosDevueltos.length,
+              librosRestantes: librosRestantes.length
+            });
+          }
         });
-      } else {
-        // Si no quedan libros, marcar como devuelto
-        await new Promise((res, rej) => {
-          db.run(
-            'UPDATE prestamos SET fechaDevolucion = ?, librosJson = ? WHERE id = ?',
-            [fechaDevolucion, JSON.stringify([]), prestamoId],
-            (err) => err ? rej(err) : res(true)
-          );
-        });
+
+      } catch (error) {
+        console.error('❌ Error en devolución parcial:', error);
+        db.run('ROLLBACK;');
+        resolve({ success: false, message: 'Error al procesar devolución: ' + error.message });
       }
-
-      resolve({ success: true, message: 'Devolución registrada' });
-    } catch (error) {
-      console.error('Error en devolución parcial:', error);
-      resolve({ success: false, message: 'Error al procesar devolución' });
-    }
+    });
   });
 });
 
 // Reemplaza la función getHistorialDevoluciones en main.js (líneas aproximadamente 320-365)
+// Reemplazar la consulta actual en getHistorialDevoluciones con esta versión mejorada
 ipcMain.handle('getHistorialDevoluciones', async (event) => {
   return new Promise((resolve, reject) => {
     const query = `
-      SELECT
-        p.id AS prestamoId,
+      SELECT 
+        hd.id,
+        hd.prestamoId,
+        hd.fechaDevolucion,
+        hd.nombreUsuario,
+        hd.apellidoUsuario,
+        hd.usuarioId,
         p.fechaPrestamo,
-        p.fechaDevolucion,
-        u.id AS usuarioId,
-        u.nombres AS usuarioNombres,
-        u.apellidos AS usuarioApellidos,
-        p.librosJson
-      FROM prestamos p
-      JOIN usuarios u ON p.userId = u.id
-      WHERE p.fechaDevolucion IS NOT NULL
-      ORDER BY p.fechaDevolucion DESC
+        -- Obtener todos los libros devueltos como un array JSON válido
+        (
+          SELECT json_group_array(
+            json_object(
+              'id', hd2.libroId,
+              'titulo', hd2.tituloLibro, 
+              'codigo', hd2.codigoLibro
+            )
+          )
+          FROM historial_devoluciones hd2
+          WHERE hd2.prestamoId = hd.prestamoId 
+          AND hd2.fechaDevolucion = hd.fechaDevolucion
+          AND hd2.usuarioId = hd.usuarioId
+        ) as librosDevueltosJson
+      FROM historial_devoluciones hd
+      JOIN prestamos p ON hd.prestamoId = p.id
+      GROUP BY hd.prestamoId, hd.fechaDevolucion, hd.usuarioId
+      ORDER BY hd.fechaDevolucion DESC, hd.prestamoId DESC
     `;
+    
     db.all(query, [], (err, rows) => {
       if (err) {
-        console.error('Error en getHistorialDevoluciones (Electron):', err);
-        resolve({ success: false, message: err.message || 'Error al obtener historial de devoluciones' });
+        console.error('❌ Error en getHistorialDevoluciones:', err);
+        resolve({ success: false, message: err.message || 'Error al obtener historial' });
       } else {
+        console.log('📋 Filas obtenidas del historial:', rows.length);
+        
         const historial = rows.map(row => {
-          let librosParsed = [];
+          let librosDevueltos = [];
+          
           try {
-            librosParsed = row.librosJson ? JSON.parse(row.librosJson) : [];
+            // Parsear directamente el array JSON
+            if (row.librosDevueltosJson) {
+              librosDevueltos = JSON.parse(row.librosDevueltosJson);
+            }
           } catch (parseError) {
-            console.error('Error al parsear librosJson en historial:', parseError);
-            librosParsed = [];
+            console.error('❌ Error al parsear librosDevueltosJson:', parseError);
+            librosDevueltos = [];
           }
+          
           return {
-            id: row.prestamoId,
+            id: row.id,
+            prestamoId: row.prestamoId,
+            usuarioId: row.usuarioId,
+            usuarioNombres: row.nombreUsuario,
+            usuarioApellidos: row.apellidoUsuario,
             fechaPrestamo: row.fechaPrestamo,
             fechaDevolucion: row.fechaDevolucion,
-            usuarioId: row.usuarioId, // ✅ CORREGIDO: era userId, ahora es usuarioId
-            usuarioNombres: row.usuarioNombres,
-            usuarioApellidos: row.usuarioApellidos,
-            libros: librosParsed,
+            librosDevueltos: librosDevueltos
           };
         });
-        console.log('✅ Historial mapeado:', historial.map(h => ({ id: h.id, usuarioId: h.usuarioId, libros: h.libros.length })));
+        
         resolve({ success: true, historial: historial });
       }
     });

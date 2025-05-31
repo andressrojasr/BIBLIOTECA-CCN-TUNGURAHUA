@@ -6,7 +6,7 @@
       <ion-searchbar 
         mode="ios" 
         animated="true" 
-        placeholder="Buscar por usuario o libro" 
+        placeholder="Buscar por usuario, libro, código o fecha" 
         [(ngModel)]="searchTerm" 
         (ionInput)="filterHistorial()"
         clearOnEdit="true">
@@ -17,15 +17,28 @@
     <ion-list *ngIf="filteredHistorial.length > 0">
       <ion-list-header>
         <ion-label>
-          Devoluciones Registradas
+          Transacciones de Devolución
           <span class="results-count" *ngIf="searchTerm.trim() !== ''">
             ({{ filteredHistorial.length }} resultado{{ filteredHistorial.length !== 1 ? 's' : '' }})
           </span>
         </ion-label>
       </ion-list-header>
       
-      <ion-item *ngFor="let item of filteredHistorial" class="historial-item">
+      <ion-item *ngFor="let item of filteredHistorial; let i = index" class="historial-item">
         <ion-label class="historial-label">
+          <!-- Header de la transacción -->
+          <div class="transaction-header">
+            <div class="transaction-number">
+              <ion-icon name="receipt-outline"></ion-icon>
+              <span>Transacción #{{ getTransactionId(item) }}</span>
+            </div>
+            <div class="transaction-date">
+              <ion-icon name="calendar-outline"></ion-icon>
+              <strong>{{ formatDate(item.fechaDevolucion) }}</strong>
+            </div>
+          </div>
+
+          <!-- Información del usuario -->
           <div class="usuario-info">
             <h2 class="usuario-nombre">
               <ion-icon name="person-outline"></ion-icon>
@@ -33,37 +46,61 @@
             </h2>
           </div>
           
+          <!-- Libros devueltos en esta transacción -->
           <div class="libros-devueltos">
             <div class="libros-header">
               <ion-icon name="library-outline"></ion-icon>
-              <span>Libro{{ item.librosDevueltos?.length > 1 ? 's' : '' }} devuelto{{ item.librosDevueltos?.length > 1 ? 's' : '' }}:</span>
+              <span class="libros-count-badge">{{ getLibrosDescription(item.librosDevueltos) }}</span>
             </div>
-            <div class="libros-list">
-              <div *ngFor="let libro of item.librosDevueltos" class="libro-item">
-                <h3>{{ libro.titulo }}</h3>
-                <p class="codigo-libro">Código: {{ libro.codigo }}</p>
-              </div>
+            
+            <!-- SECCIÓN CORREGIDA: Lista de libros -->
+            <div class="libros-list" *ngIf="hasLibros(item.librosDevueltos)">
+  <div *ngFor="let libro of item.librosDevueltos; let j = index" class="libro-item">
+    <div class="libro-content">
+      <div class="libro-header">
+        <ion-icon name="book-outline" color="primary"></ion-icon>
+        <span class="libro-numero">Libro {{ j + 1 }}</span>
+      </div>
+      <h3 class="libro-titulo">{{ libro.titulo || 'Título no disponible' }}</h3>
+      <p class="codigo-libro">
+        <ion-icon name="barcode-outline"></ion-icon>
+        <span>Código: {{ libro.codigo || 'N/A' }}</span>
+      </p>
+    </div>
+  </div>
+</div>
+            
+            <!-- Mensaje si no hay libros -->
+            <div class="no-libros" *ngIf="!hasLibros(item.librosDevueltos)">
+              <ion-icon name="alert-circle-outline" color="warning"></ion-icon>
+              <span>No se encontraron libros registrados para esta transacción</span>
             </div>
           </div>
           
+          <!-- Información de fechas -->
           <div class="fechas-info">
-            <p class="fecha-prestamo">
-              <ion-icon name="calendar-outline"></ion-icon>
-              Préstamo: {{ item.fechaPrestamo | date:'dd/MM/yyyy' }}
-            </p>
-            <p class="fecha-devolucion">
-              <ion-icon name="checkmark-circle-outline"></ion-icon>
-              Devolución: {{ item.fechaDevolucion | date:'dd/MM/yyyy' }}
-            </p>
+            <div class="fecha-item">
+              <ion-icon name="calendar-outline" color="medium"></ion-icon>
+              <span class="fecha-label">Fecha de préstamo:</span>
+              <span class="fecha-value">{{ formatDate(item.fechaPrestamo) }}</span>
+            </div>
+            <div class="fecha-item devolucion">
+              <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+              <span class="fecha-label">Fecha de devolución:</span>
+              <span class="fecha-value">{{ formatDate(item.fechaDevolucion) }}</span>
+            </div>
           </div>
-          
-          <!-- Información adicional del préstamo -->
-          <div class="prestamo-info" *ngIf="item.totalLibrosPrestamo && item.totalLibrosPrestamo > item.librosDevueltos?.length">
-            <p class="info-prestamo">
-              <ion-icon name="information-circle-outline"></ion-icon>
-              Préstamo original: {{ item.totalLibrosPrestamo }} libro{{ item.totalLibrosPrestamo > 1 ? 's' : '' }}
-              ({{ item.librosDevueltos?.length }} devuelto{{ item.librosDevueltos?.length > 1 ? 's' : '' }} en esta fecha)
-            </p>
+
+          <!-- Detalles adicionales -->
+          <div class="detalles-adicionales">
+            <div class="detalle-item">
+              <ion-icon name="information-circle-outline" color="medium"></ion-icon>
+              <span>ID Préstamo: {{ item.prestamoId }}</span>
+            </div>
+            <div class="detalle-item">
+              <ion-icon name="person-circle-outline" color="medium"></ion-icon>
+              <span>ID Usuario: {{ item.usuarioId }}</span>
+            </div>
           </div>
         </ion-label>
       </ion-item>
@@ -75,6 +112,7 @@
       <ion-text color="medium">
         <h3 *ngIf="searchTerm.trim() === ''">No hay devoluciones registradas</h3>
         <h3 *ngIf="searchTerm.trim() !== ''">No se encontraron resultados para "{{ searchTerm }}"</h3>
+        <p *ngIf="searchTerm.trim() === ''">Las transacciones de devolución aparecerán aquí cuando se devuelvan libros.</p>
         <p *ngIf="searchTerm.trim() !== ''">Intenta con otro término de búsqueda</p>
       </ion-text>
     </div>
@@ -83,8 +121,52 @@
     <div *ngIf="isProcessing" class="loading-state">
       <ion-spinner name="crescent"></ion-spinner>
       <ion-text color="medium">
-        <p>Cargando historial...</p>
+        <p>Cargando historial de transacciones...</p>
       </ion-text>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div *ngIf="filteredHistorial.length > 0 && !isProcessing" class="stats-section">
+      <ion-card class="stats-card">
+        <ion-card-content>
+          <div class="stats-grid">
+            <div class="stats-item">
+              <ion-icon name="stats-chart-outline"></ion-icon>
+              <div class="stats-info">
+                <span class="stats-number">{{ filteredHistorial.length }}</span>
+                <span class="stats-label">Transacciones totales</span>
+              </div>
+            </div>
+            <div class="stats-item">
+              <ion-icon name="library-outline"></ion-icon>
+              <div class="stats-info">
+                <span class="stats-number">{{ getTotalLibrosDevueltos() }}</span>
+                <span class="stats-label">Libros devueltos</span>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="action-buttons">
+      <ion-button 
+        fill="outline" 
+        color="medium" 
+        (click)="refreshHistorial()"
+        [disabled]="isProcessing">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Actualizar
+      </ion-button>
+      
+      <ion-button 
+        fill="clear" 
+        color="medium" 
+        (click)="cancel()">
+        <ion-icon name="close-outline" slot="start"></ion-icon>
+        Cerrar
+      </ion-button>
     </div>
   </div>
 </ion-content>

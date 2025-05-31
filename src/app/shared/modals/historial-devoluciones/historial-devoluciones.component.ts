@@ -4,21 +4,21 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 import { HeaderComponent } from '../../components/header/header.component';
 
-// Interfaz para el historial de devoluciones
 interface LibroDevuelto {
+  id: number;
   titulo: string;
   codigo: string;
 }
 
 interface HistorialDevolucion {
   id: number;
+  prestamoId: number;
+  usuarioId: number;
   usuarioNombres: string;
   usuarioApellidos: string;
   fechaPrestamo: string;
   fechaDevolucion: string;
   librosDevueltos: LibroDevuelto[];
-  totalLibrosPrestamo?: number; // Total de libros en el préstamo original
-  prestamoId?: number; // ID del préstamo original para referencia
 }
 
 @Component({
@@ -49,35 +49,43 @@ export class HistorialDevolucionesComponent implements OnInit {
   }
 
   async loadHistorialDevoluciones() {
-    this.isProcessing = true;
-    try {
-      const result = await (window as any).electronAPI.getHistorialDevoluciones();
+  this.isProcessing = true;
+  try {
+    console.log('🔄 Cargando historial de devoluciones...');
+    const result = await (window as any).electronAPI.getHistorialDevoluciones();
+    
+    console.log('📋 Resultado del historial:', result);
+    
+    if (result && result.success) {
+      this.historial = result.historial || [];
+      console.log('✅ Historial cargado:', this.historial.length, 'transacciones');
       
-      if (result && result.success) {
-        this.historial = result.historial || [];
-        console.log('✅ Historial cargado:', this.historial);
-      } else if (Array.isArray(result)) {
-        // Si el resultado es directamente un array (compatibilidad)
-        this.historial = result;
-      } else {
-        this.historial = [];
-        this.presentToast(result?.message || 'No se pudo cargar el historial.', 'warning');
-      }
+      // Verificación detallada de los datos
+      this.historial.forEach(item => {
+        if (!item.librosDevueltos || !Array.isArray(item.librosDevueltos)) {
+          console.warn('⚠️ Formato incorrecto en librosDevueltos para préstamo:', item.prestamoId);
+          item.librosDevueltos = [];
+        }
+      });
       
-      this.filterHistorial();
-      
-      if (this.historial.length === 0) {
-        console.log('ℹ️ No hay historial de devoluciones disponible');
-      }
-    } catch (error) {
-      console.error('❌ Error al cargar historial de devoluciones:', error);
+    } else {
       this.historial = [];
-      this.filteredHistorial = [];
-      this.presentToast('Error al cargar el historial de devoluciones.', 'danger');
-    } finally {
-      this.isProcessing = false;
+      const errorMsg = result?.message || 'No se pudo cargar el historial.';
+      console.log('⚠️ Error al cargar historial:', errorMsg);
+      this.presentToast(errorMsg, 'warning');
     }
+    
+    this.filterHistorial();
+    
+  } catch (error) {
+    console.error('❌ Error al cargar historial de devoluciones:', error);
+    this.historial = [];
+    this.filteredHistorial = [];
+    this.presentToast('Error al cargar el historial de devoluciones.', 'danger');
+  } finally {
+    this.isProcessing = false;
   }
+}
 
   filterHistorial() {
     const searchTerm = this.searchTerm.toLowerCase().trim();
@@ -93,13 +101,19 @@ export class HistorialDevolucionesComponent implements OnInit {
         // Búsqueda por nombre completo del usuario
         const fullNameMatch = `${item.usuarioNombres} ${item.usuarioApellidos}`.toLowerCase().includes(searchTerm);
         
-        // Búsqueda en los libros devueltos
+        // Búsqueda en los libros devueltos - MEJORADA
         const booksMatch = item.librosDevueltos?.some(libro => 
           libro.titulo?.toLowerCase().includes(searchTerm) ||
           libro.codigo?.toLowerCase().includes(searchTerm)
         ) || false;
         
-        return userMatch || fullNameMatch || booksMatch;
+        // Búsqueda por fecha
+        const dateMatch = item.fechaDevolucion?.includes(searchTerm) || false;
+        
+        // Búsqueda por ID de préstamo
+        const prestamoIdMatch = item.prestamoId?.toString().includes(searchTerm) || false;
+        
+        return userMatch || fullNameMatch || booksMatch || dateMatch || prestamoIdMatch;
       });
     }
     
@@ -120,14 +134,50 @@ export class HistorialDevolucionesComponent implements OnInit {
     this.modalCtrl.dismiss();
   }
 
-  // Método adicional para limpiar la búsqueda
   clearSearch() {
     this.searchTerm = '';
     this.filterHistorial();
   }
 
-  // Método para refrescar el historial
   async refreshHistorial() {
     await this.loadHistorialDevoluciones();
+  }
+
+  // Método utilitario para formatear fecha
+  formatDate(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  // Método para obtener el texto descriptivo de los libros - MEJORADO
+  getLibrosDescription(libros: LibroDevuelto[]): string {
+    if (!libros || libros.length === 0) return 'Sin libros registrados';
+    if (libros.length === 1) return '1 libro devuelto';
+    return `${libros.length} libros devueltos`;
+  }
+
+  // NUEVO: Método para verificar si hay libros para mostrar
+  hasLibros(libros: LibroDevuelto[]): boolean {
+    return libros && libros.length > 0;
+  }
+
+  // NUEVO: Método para generar un ID único para la transacción
+  getTransactionId(item: HistorialDevolucion): string {
+    return `${item.prestamoId}-${this.formatDate(item.fechaDevolucion).replace(/\//g, '')}`;
+  }
+
+  // NUEVO: Método para calcular el total de libros devueltos
+  getTotalLibrosDevueltos(): number {
+    return this.filteredHistorial.reduce((total, item) => {
+      return total + (item.librosDevueltos?.length || 0);
+    }, 0);
   }
 }
