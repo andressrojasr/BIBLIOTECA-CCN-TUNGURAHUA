@@ -24,7 +24,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
         password TEXT
       )`,
       `CREATE TABLE IF NOT EXISTS books (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         titulo TEXT,
         autor TEXT,
         estanteria TEXT,

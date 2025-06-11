@@ -24,6 +24,7 @@ export class AddUpdateBookComponent  implements OnInit {
 
   constructor() {
     this.bookForm = this.fb.group({
+      id: ['', [Validators.required, Validators.min(1)]],
       titulo: ['', [Validators.required]],
       autor: ['', [Validators.required]],
       estanteria: ['', [Validators.min(1)]],
@@ -36,6 +37,7 @@ export class AddUpdateBookComponent  implements OnInit {
   ngOnInit() {
     if (this.book) {
       this.bookForm.patchValue({
+        id: this.book.id,
         titulo: this.book.titulo,
         autor: this.book.autor,
         estanteria: this.book.estanteria == '0' ? '' : this.book.estanteria,
@@ -56,6 +58,7 @@ export class AddUpdateBookComponent  implements OnInit {
       const formData = this.bookForm.value;
       let bookData: Book;
       bookData = {
+        id: formData.id,
         titulo: formData.titulo,
         autor: formData.autor,
         estanteria: formData.estanteria || 0,
@@ -88,8 +91,10 @@ export class AddUpdateBookComponent  implements OnInit {
             });
             await toast.present();
           } else {
+            let message ='Error al agregar el libro'
+            if (response.error = 'DUPLICATE_PRIMARY_KEY') message = 'Ya existe un libro con ese código'
             const toast = await this.toastCtrl.create({
-              message: 'Error al agregar el libro',
+              message: message,
               duration: 2000,
               color: 'danger'
             });
@@ -98,7 +103,7 @@ export class AddUpdateBookComponent  implements OnInit {
         } catch (err) {
           console.error('Error al agregar el libro:', err);
           const toast = await this.toastCtrl.create({
-            message: 'Error de conexión',
+            message: 'Error de conexión: '+ err,
             duration: 2000,
             color: 'danger'
           });

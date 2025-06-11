@@ -51,23 +51,68 @@ ipcMain.handle('login', async (event, username, password) => {
 ipcMain.handle('insertBook', async (event, libro) => {
   return new Promise((resolve, reject) => {
       db.run(
-        `INSERT INTO books (titulo, autor, estanteria, fila, caja, ejemplares, prestados) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [libro.titulo, libro.autor, libro.estanteria, libro.fila, libro.caja, libro.ejemplares, libro.prestados],
+        `INSERT INTO books (id, titulo, autor, estanteria, fila, caja, ejemplares, prestados) VALUES (?,?, ?, ?, ?, ?, ?, ?)`,
+        [libro.id, libro.titulo, libro.autor, libro.estanteria, libro.fila, libro.caja, libro.ejemplares, libro.prestados],
         (err) => {
           if (err) {
-            reject(err);
+          if (err.code === 'SQLITE_CONSTRAINT') {
+            resolve({ success: false, error: 'DUPLICATE_PRIMARY_KEY' });
           } else {
-            resolve({ success: true });
+            resolve({ success: false, error: 'UNKNOWN_ERROR' });
           }
+        } else {
+          resolve({ success: true });
+        }
         }
       )
   });
 });
 
-ipcMain.handle('getBooks', async (event) => {
+ipcMain.handle('getBook', async (event, offset, limit, filterField, filterValue) => {
+  return new Promise((resolve, reject) => {
+    // Lista de campos permitidos para evitar inyecciones
+    const allowedFields = ['id', 'titulo', 'autor'];
+    if (!allowedFields.includes(filterField)) {
+      return reject(new Error('Campo de filtrado no permitido'));
+    }
+
+    let query = '';
+    let params = [];
+
+    // Construir la consulta según el tipo de filtro
+    if (filterField === 'id') {
+      query = `
+        SELECT * FROM books
+        WHERE id = ?
+        ORDER BY id DESC
+        LIMIT ? OFFSET ?
+      `;
+      params = [filterValue, limit, offset]; // búsqueda exacta
+    } else {
+      query = `
+        SELECT * FROM books
+        WHERE ${filterField} LIKE ?
+        ORDER BY id DESC
+        LIMIT ? OFFSET ?
+      `;
+      params = [`%${filterValue}%`, limit, offset]; // búsqueda parcial
+    }
+
+    db.all(query, params, (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ success: true, books: rows });
+      }
+    });
+  });
+});
+
+ipcMain.handle('getBooks', async (event, offset,limit) => {
   return new Promise((resolve, reject) => {
     db.all(
-      'SELECT * FROM books ORDER BY id DESC',
+      `SELECT * FROM books ORDER BY id DESC LIMIT ? OFFSET ?`,
+      [limit, offset],
       (err, rows) => {
         if (err) {
           reject(err);
