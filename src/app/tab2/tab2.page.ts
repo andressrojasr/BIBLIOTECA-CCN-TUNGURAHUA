@@ -15,7 +15,7 @@ export class Tab2Page{
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
   constructor(private utils: UtilsService, private toastCtrl: ToastController, private alertCtrl: AlertController) {
-    this.loadBooks();
+    this.loadMore();
   }
 
   showScrollToTop = false;
@@ -32,6 +32,11 @@ export class Tab2Page{
   books: Book[] = [];
   filteredBooks: Book[] = [];
   searchTerm: string = '';
+  offset = 0;
+  limit = 50;
+  loading = false;
+  selectedFilter: string = 'id'; // Filtro por defecto
+
 
 
   async editBook(book: Book) {
@@ -41,7 +46,13 @@ export class Tab2Page{
       componentProps: { book }
     })
     if (success) {
-      this.loadBooks();
+      this.loadMore()
+      const toast = await this.toastCtrl.create({
+          message: 'Libro editado con exito',
+          duration: 3000,
+          color: 'success'
+        });
+      toast.present()
     };
   }
   
@@ -54,20 +65,23 @@ export class Tab2Page{
     if (success) 'Agregado con exito';
   }
 
+  async loadMore(event?: any) {
+    if (this.loading) return;
 
-  async loadBooks() {
-    try {
-      const result = await window.electronAPI.getBooks();
-      if (result.success) {
-        this.books = result.books || [];
-        this.filteredBooks = this.books; // Inicializa filteredBooks con todos los libros
-      } else {
-        console.warn('No se encontraron libros.');
-      }
-    } catch (err) {
-      console.error('Error al obtener libros:', err);
+    this.loading = true;
+
+    const result = await window.electronAPI.getBooks(this.offset, this.limit);
+    this.books = [...this.books, ...result.books];
+    this.filteredBooks = this.books
+    this.offset += this.limit;
+    this.loading = false;
+
+    event.target.complete();
+
+    if (result.books.length < this.limit) {
+      event.target.disabled = true; // No hay más libros
     }
-  }
+}
 
   async confirmDelete(book: Book) {
     if (book.prestados > 0) {
@@ -102,13 +116,13 @@ export class Tab2Page{
     try {
       const result = await window.electronAPI.deleteBook(bookId);
       if (result.success) {
+        this.loadMore();
         const toast = await this.toastCtrl.create({
           message: 'Libro Eliminado exitosamente',
           duration: 3000,
           color: 'success'
         });
         await toast.present();
-        this.loadBooks(); // Vuelve a cargar los libros actualizados
       } else {
         const toast = await this.toastCtrl.create({
           message: 'Error al eliminar el libro',
@@ -122,19 +136,46 @@ export class Tab2Page{
     }
   }
 
-  filterBooks() {
-          const searchTerm = this.searchTerm.toLowerCase();
-      
-          if (searchTerm.trim() === '') {
-            this.filteredBooks = this.books;
-          } else {
-            this.filteredBooks = this.books.filter(book => {
-              return (
-                book.titulo.toLowerCase().includes(searchTerm) ||
-                book.autor.toLowerCase().includes(searchTerm) ||
-                String(book.id).toLowerCase().includes(searchTerm)
-              );
-            });
-          }
+  async filterBooks(reset: boolean = true) {
+  console.log('Filtrando libros con término:', this.searchTerm, 'y filtro:', this.selectedFilter);
+
+  const searchTerm = this.searchTerm.trim().toLowerCase();
+
+  if (reset) {
+    this.offset = 0;       // Reinicia offset si es un nuevo término de búsqueda
+    this.books = [];       // Reinicia resultados
+    this.filteredBooks = [];
   }
+
+  if (searchTerm === '') {
+    this.loadMore(); // Si no hay término de búsqueda, cargar todos
+    return;
+  }
+
+  if (this.loading) return;
+
+  this.loading = true;
+
+  try {
+    const result = await window.electronAPI.getBook(this.offset, this.limit, this.selectedFilter, searchTerm);
+
+    const newBooks = result.books || [];
+
+    // Concatenar si no es reset
+    this.books = reset ? newBooks : [...this.books, ...newBooks];
+    this.filteredBooks = this.books;
+
+    // Aumenta el offset para la próxima carga
+    this.offset += this.limit;
+  } catch (error) {
+    const toast = await this.toastCtrl.create({
+      message: 'Error al buscar libro: ' + error,
+      duration: 2000,
+      color: 'danger'
+    });
+    toast.present();
+  } finally {
+    this.loading = false;
+  }
+}
 }

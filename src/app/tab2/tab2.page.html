@@ -3,8 +3,13 @@
 <ion-content [fullscreen]="true" scrollEvents="true" (ionScroll)="onScroll($event)">
   <div class="options">
     <ion-searchbar mode="ios" animated="true" placeholder="Buscar Libro" [(ngModel)]="searchTerm" (ionInput)="filterBooks()"></ion-searchbar>
-    <ion-button expand="full" color="tertiary" shape="round" style="--color: white;" (click)="addBook()">
-      <ion-icon name="add-circle-outline"></ion-icon>
+        <ion-select aria-label="Fruit" interface="popover" label="Filtrar por: " value="id" fill="outline" (ionChange)="filterBooks()" [(ngModel)]="selectedFilter">
+          <ion-select-option value="id">Código</ion-select-option>
+          <ion-select-option value="titulo">Título</ion-select-option>
+          <ion-select-option value="autor">Autor</ion-select-option>
+        </ion-select>
+    <ion-button expand="full" size="medium" color="tertiary" shape="round" style="--color: white;" (click)="addBook()">
+      <ion-icon slot="start" name="add-circle-outline"></ion-icon>
       Agregar Libro
     </ion-button>
   </div>
@@ -39,5 +44,9 @@
       <ion-icon name="chevron-up-circle"></ion-icon>
     </ion-fab-button>
   </ion-fab>
+  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMore($event)">
+    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más libros...">
+    </ion-infinite-scroll-content>
+  </ion-infinite-scroll>
 </ion-content>
 

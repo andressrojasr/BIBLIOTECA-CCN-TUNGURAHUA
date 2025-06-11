@@ -3,6 +3,18 @@
     <div class="form-wrapper">
         <form  class="login-form" [formGroup]="bookForm" (ngSubmit)="onSubmit()">
 
+            <ion-item *ngIf="!book">
+              <ion-input placeholder="Código" fill="outline" formControlName="id" type="number">
+                <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
+              </ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="bookForm.get('id')?.touched && bookForm.get('id')?.errors?.['min'] && !book">
+              <p class="ion-padding-start">El número código no puede ser menor a 1</p>
+            </ion-text>
+            <ion-text color="danger" *ngIf="bookForm.get('id')?.touched && bookForm.get('id')?.errors?.['required'] && !book">
+              <p class="ion-padding-start">El código es requerido</p>
+            </ion-text>
+
             <ion-item>
               <ion-input placeholder="Titulo (Requerido)" fill="outline" formControlName="titulo">
                 <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>

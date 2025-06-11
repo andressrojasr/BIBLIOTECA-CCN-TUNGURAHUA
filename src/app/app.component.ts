@@ -5,7 +5,8 @@ declare global {
     electronAPI: {
       login: (username: string, password: string) => Promise<any>;
       insertBook: (book: any) => Promise<any>;
-      getBooks: () => Promise<any>;
+      getBooks: (offset: number, limit: number) => Promise<any>;
+      getBook: (offset, limit, filterField: string, filterValue: string) => Promise<any>;
       updateBook: (book: any) => Promise<any>;
       deleteBook: (bookId: number) => Promise<any>;
       getUsers: () => Promise<any>;
