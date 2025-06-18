@@ -6,10 +6,11 @@ declare global {
       login: (username: string, password: string) => Promise<any>;
       insertBook: (book: any) => Promise<any>;
       getBooks: (offset: number, limit: number) => Promise<any>;
-      getBook: (offset, limit, filterField: string, filterValue: string) => Promise<any>;
+      getBook: (offset:number, limit:number, filterField: string, filterValue: string) => Promise<any>;
       updateBook: (book: any) => Promise<any>;
       deleteBook: (bookId: number) => Promise<any>;
-      getUsers: () => Promise<any>;
+      getUsers: (offset: number, limit: number) => Promise<any>;
+      getUser: (offset: number, limit: number, filterField: string, filterValue: string) => Promise<any>;
       insertUser: (user: any) => Promise<any>;
       updateUser: (user: any) => Promise<any>;
       deleteUser: (userId: number) => Promise<any>;

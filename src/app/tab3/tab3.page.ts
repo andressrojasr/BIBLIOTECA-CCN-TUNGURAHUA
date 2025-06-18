@@ -15,7 +15,7 @@ export class Tab3Page {
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
   constructor(private utils: UtilsService, private toastCtrl: ToastController, private alertCtrl: AlertController) {
-    this.loadUsers();
+    this.loadMore();
   }
 
   showScrollToTop = false;
@@ -32,6 +32,10 @@ export class Tab3Page {
   users: User[] = [];
   filteredUsers: User[] = [];
   searchTerm: string = '';
+  offset = 0;
+  limit = 25; // Número de usuarios a cargar por petición
+  loading = false;
+  selectedFilter: string = 'id'; // Filtro por defecto
 
 
   async editUser(user: User) {
@@ -41,7 +45,13 @@ export class Tab3Page {
       componentProps: { user }
     })
     if (success) {
-      this.loadUsers();
+      this.loadMore()
+      const toast = await this.toastCtrl.create({
+          message: 'Usuario editado con exito',
+          duration: 3000,
+          color: 'success'
+        });
+      toast.present()
     };
   }
   
@@ -54,18 +64,21 @@ export class Tab3Page {
     if (success) 'Agregado con exito';
   }
 
+  async loadMore(event?: any) {
+    if (this.loading) return;
 
-  async loadUsers() {
-    try {
-      const result = await window.electronAPI.getUsers();
-      if (result.success) {
-        this.users = result.users || [];
-        this.filteredUsers = this.users; // Inicializa filteredUsers con todos los libros
-      } else {
-        console.warn('No se encontraron libros.');
-      }
-    } catch (err) {
-      console.error('Error al obtener libros:', err);
+    this.loading = true;
+
+    const result = await window.electronAPI.getUsers(this.offset, this.limit);
+    this.users = [...this.users, ...result.users];
+    this.filteredUsers = this.users
+    this.offset += this.limit;
+    this.loading = false;
+
+    event.target.complete();
+
+    if (result.books.length < this.limit) {
+      event.target.disabled = true; // No hay más libros
     }
   }
 
@@ -99,7 +112,7 @@ export class Tab3Page {
           color: 'success'
         });
         await toast.present();
-        this.loadUsers(); // Vuelve a cargar los libros actualizados
+        this.loadMore(); // Recargar la lista de usuarios
       } else {
         const toast = await this.toastCtrl.create({
           message: 'Error al eliminar el usuario',
@@ -113,21 +126,47 @@ export class Tab3Page {
     }
   }
 
-  filterUsers() {
-          const searchTerm = this.searchTerm.toLowerCase();
-      
-          if (searchTerm.trim() === '') {
-            this.filteredUsers = this.users;
-          } else {
-            this.filteredUsers = this.users.filter(user => {
-              return (
-                user.nombres.toLowerCase().includes(searchTerm) ||
-                user.apellidos.toLowerCase().includes(searchTerm) ||
-                user.cedula.toLowerCase().includes(searchTerm) ||
-                String(user.id).toLowerCase().includes(searchTerm)
-              );
-            });
-          }
+  async filterUsers(reset: boolean = true) {
+  console.log('Filtrando usuarios con término:', this.searchTerm, 'y filtro:', this.selectedFilter);
+
+  const searchTerm = this.searchTerm.trim().toLowerCase();
+
+  if (reset) {
+    this.offset = 0;       // Reinicia offset si es un nuevo término de búsqueda
+    this.users = [];       // Reinicia resultados
+    this.filteredUsers = [];
   }
+
+  if (searchTerm === '') {
+    this.loadMore(); // Si no hay término de búsqueda, cargar todos
+    return;
+  }
+
+  if (this.loading) return;
+
+  this.loading = true;
+
+  try {
+    const result = await window.electronAPI.getUser(this.offset, this.limit, this.selectedFilter, searchTerm);
+
+    const newUsers = result.users || [];
+
+    // Concatenar si no es reset
+    this.users = reset ? newUsers : [...this.users, ...newUsers];
+    this.filteredUsers = this.users;
+
+    // Aumenta el offset para la próxima carga
+    this.offset += this.limit;
+  } catch (error) {
+    const toast = await this.toastCtrl.create({
+      message: 'Error al buscar usuario: ' + error,
+      duration: 2000,
+      color: 'danger'
+    });
+    toast.present();
+  } finally {
+    this.loading = false;
+  }
+}
 
 }

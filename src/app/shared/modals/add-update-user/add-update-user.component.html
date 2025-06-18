@@ -5,7 +5,7 @@
 
             <ion-item>
               <ion-input placeholder="Nombres (Requeridos)" fill="outline" formControlName="nombres">
-                <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
+                <ion-icon slot="start" color="primary" name="person-circle-outline" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
             <ion-text color="danger" *ngIf="userForm.get('nombres')?.touched && userForm.get('nombres')?.errors?.['required']">
@@ -14,7 +14,7 @@
 
             <ion-item>
               <ion-input placeholder="Apellidos (Requeridos)" fill="outline" formControlName="apellidos">
-                <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
+                <ion-icon slot="start" color="primary" name="people-outline" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
             <ion-text color="danger" *ngIf="userForm.get('apellidos')?.touched && userForm.get('apellidos')?.errors?.['required']">
@@ -23,7 +23,7 @@
 
             <ion-item>
               <ion-input placeholder="Cédula (Requerida)" fill="outline" formControlName="cedula" type="text" inputmode="numeric" pattern="[0-9]*">
-                <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
+                <ion-icon slot="start" color="primary" name="card-outline" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
             <ion-text color="danger" *ngIf="userForm.get('cedula')?.touched && userForm.get('cedula')?.invalid">
@@ -36,14 +36,14 @@
             </ion-text>
 
             <ion-item>
-              <ion-input placeholder="Profesion" fill="outline" formControlName="profesion" type="text">
-                <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
+              <ion-input placeholder="Profesión" fill="outline" formControlName="profesion" type="text">
+                <ion-icon slot="start" color="primary" name="briefcase-outline" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
 
             <ion-item>
               <ion-input placeholder="Lugar de trabajo" fill="outline" formControlName="lugarTrabajo" type="text">
-                <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
+                <ion-icon slot="start" color="primary" name="business-outline" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
 
@@ -62,7 +62,7 @@
 
             <ion-item>
               <ion-input placeholder="Edad (Requerida)" fill="outline" formControlName="edad" type="number">
-                <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
+                <ion-icon slot="start" color="primary" name="hourglass-outline" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
             <ion-text color="danger" *ngIf="userForm.get('edad')?.touched && userForm.get('edad')?.errors?.['required']">
@@ -73,8 +73,8 @@
             </ion-text>
 
             <ion-item>
-              <ion-input placeholder="Direccion (Requerida)" fill="outline" formControlName="direccion" type="text">
-                <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
+              <ion-input placeholder="Dirección (Requerida)" fill="outline" formControlName="direccion" type="text">
+                <ion-icon slot="start" color="primary" name="home-outline" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
             <ion-text color="danger" *ngIf="userForm.get('direccion')?.touched && userForm.get('direccion')?.errors?.['required']">
@@ -82,8 +82,8 @@
             </ion-text>
 
             <ion-item>
-              <ion-input placeholder="Canton (Requerido)" fill="outline" formControlName="canton" type="text">
-                <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
+              <ion-input placeholder="Cantón (Requerido)" fill="outline" formControlName="canton" type="text">
+                <ion-icon slot="start" color="primary" name="map-outline" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
             <ion-text color="danger" *ngIf="userForm.get('canton')?.touched && userForm.get('canton')?.errors?.['required']">
@@ -92,7 +92,7 @@
 
             <ion-item>
               <ion-input placeholder="Celular" fill="outline" formControlName="celular" type="text" inputmode="numeric" pattern="[0-9]*">
-                <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
+                <ion-icon slot="start" color="primary" name="call-outline" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
             <ion-text color="danger" *ngIf="userForm.get('celular')?.touched && userForm.get('celular')?.invalid">
@@ -103,7 +103,7 @@
 
             <ion-item>
               <ion-input placeholder="Correo (Requerido)" fill="outline" formControlName="correo" type="email">
-                <ion-icon slot="start" color="secondary" name="person" aria-hidden="true"></ion-icon>
+                <ion-icon slot="start" color="primary" name="mail-outline" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
             <ion-text color="danger" *ngIf="userForm.get('celular')?.touched && userForm.get('correo')?.errors?.['required']">
@@ -114,7 +114,7 @@
             </ion-text>
 
             <ion-button expand="block" type="submit" [disabled]="userForm.invalid || isProcessing" (click)="onSubmit()" color="tertiary">
-            {{user ? 'Actualizar Usuario' : 'Agregar Usuario'}}
+            {{user ? 'Editar Usuario' : 'Agregar Usuario'}}
             </ion-button>
         </form>
     </div>

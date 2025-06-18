@@ -164,10 +164,11 @@ ipcMain.handle('deleteBook', async (event, bookId) => {
   });
 });
 
-ipcMain.handle('getUsers', async (event) => {
+ipcMain.handle('getUsers', async (event, offset,limit) => {
   return new Promise((resolve, reject) => {
     db.all(
-      'SELECT * FROM usuarios ORDER BY id DESC',
+      `SELECT * FROM usuarios ORDER BY id DESC LIMIT ? OFFSET ?`,
+      [limit, offset],
       (err, rows) => {
         if (err) {
           reject(err);
@@ -178,6 +179,47 @@ ipcMain.handle('getUsers', async (event) => {
     );
   });
 });
+
+ipcMain.handle('getUser', async (event, offset, limit, filterField, filterValue) => {
+  return new Promise((resolve, reject) => {
+    // Lista de campos permitidos para evitar inyecciones
+    const allowedFields = ['id', 'cedula', 'apellidos', 'nombres'];
+    if (!allowedFields.includes(filterField)) {
+      return reject(new Error('Campo de filtrado no permitido'));
+    }
+
+    let query = '';
+    let params = [];
+
+    // Construir la consulta según el tipo de filtro
+    if (filterField === 'id') {
+      query = `
+        SELECT * FROM usuarios
+        WHERE id = ?
+        ORDER BY id DESC
+        LIMIT ? OFFSET ?
+      `;
+      params = [filterValue, limit, offset]; // búsqueda exacta
+    } else {
+      query = `
+        SELECT * FROM usuarios
+        WHERE ${filterField} LIKE ?
+        ORDER BY id DESC
+        LIMIT ? OFFSET ?
+      `;
+      params = [`%${filterValue}%`, limit, offset]; // búsqueda parcial
+    }
+
+    db.all(query, params, (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ success: true, users: rows });
+      }
+    });
+  });
+});
+
 
 ipcMain.handle('insertUser', async (event, usuario) => {
   return new Promise((resolve, reject) => {

@@ -124,14 +124,14 @@ export class AddUpdateUserComponent  implements OnInit {
       const result = await window.electronAPI.updateUser(user);
       if (result.success) {
         const toast = await this.toastCtrl.create({
-          message: 'Usuario actualizado exitosamente',
+          message: 'Usuario editado exitosamente',
           duration: 3000,
           color: 'success'
         });
         await toast.present();
       } else {
         const toast = await this.toastCtrl.create({
-          message: 'Error al actualizar el usuario',
+          message: 'Error al editar el usuario',
           duration: 2000,
           color: 'danger'
         });

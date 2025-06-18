@@ -33,7 +33,7 @@ export class Tab2Page{
   filteredBooks: Book[] = [];
   searchTerm: string = '';
   offset = 0;
-  limit = 50;
+  limit = 25; // Número de libros a cargar por petición
   loading = false;
   selectedFilter: string = 'id'; // Filtro por defecto
 
@@ -81,7 +81,7 @@ export class Tab2Page{
     if (result.books.length < this.limit) {
       event.target.disabled = true; // No hay más libros
     }
-}
+  }
 
   async confirmDelete(book: Book) {
     if (book.prestados > 0) {
