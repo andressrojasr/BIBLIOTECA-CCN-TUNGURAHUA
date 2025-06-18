@@ -57,21 +57,42 @@ export class AddUpdateBookComponent  implements OnInit {
       this.isProcessing = true;
       const formData = this.bookForm.value;
       let bookData: Book;
-      bookData = {
-        id: formData.id,
-        titulo: formData.titulo,
-        autor: formData.autor,
-        estanteria: formData.estanteria || 0,
-        fila: formData.fila || 0,
-        caja: formData.caja || 0,
-        ejemplares: formData.ejemplares,
-        prestados: 0,
-      };
+      
       if (this.book) {
+        if(this.book.ejemplares < this.book.prestados) {
+          const toast = await this.toastCtrl.create({
+            message: 'No se puede editar el libro, el número de ejemplares no puede ser menor que los prestados',
+            duration: 3000,
+            color: 'danger'
+          });
+          await toast.present();
+          this.isProcessing = false;
+          return;
+        }
+        bookData = {
+          id: formData.id,
+          titulo: formData.titulo,
+          autor: formData.autor,
+          estanteria: formData.estanteria || 0,
+          fila: formData.fila || 0,
+          caja: formData.caja || 0,
+          ejemplares: formData.ejemplares,
+          prestados: this.book.prestados || 0, // Mantener el número de prestados si se edita
+        };
         bookData.id = this.book.id;
         await this.editBook(bookData);
       }
       else {
+        bookData = {
+          id: formData.id,
+          titulo: formData.titulo,
+          autor: formData.autor,
+          estanteria: formData.estanteria || 0,
+          fila: formData.fila || 0,
+          caja: formData.caja || 0,
+          ejemplares: formData.ejemplares,
+          prestados: 0,
+        };
         await this.addBook(bookData);
       }
     } else {
@@ -116,14 +137,14 @@ export class AddUpdateBookComponent  implements OnInit {
       const result = await window.electronAPI.updateBook(book);
       if (result.success) {
         const toast = await this.toastCtrl.create({
-          message: 'Libro actualizado exitosamente',
+          message: 'Libro editado exitosamente',
           duration: 3000,
           color: 'success'
         });
         await toast.present();
       } else {
         const toast = await this.toastCtrl.create({
-          message: 'Error al actualizar el libro',
+          message: 'Error al editar el libro',
           duration: 2000,
           color: 'danger'
         });

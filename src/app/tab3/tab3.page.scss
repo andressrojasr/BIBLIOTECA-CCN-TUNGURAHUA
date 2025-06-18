@@ -12,15 +12,25 @@ ion-searchbar {
   --color: #071e3d;
   --placeholder-color: #071e3d;
   margin: 10px;
+  min-width: 100px;
 }
+
+ion-select {
+  flex: 0.01;
+  --background: white;
+  --color: #071e3d;
+  --placeholder-color: #071e3d;
+  max-width: 300px;
+}
+
 .table{
-  width: 95%;
+  width: 90%;
 }
 
 .options{
   padding-top: 40px;
   padding-bottom: 5px;
-  width: 60%;
+  width: 80%;
   display: flex;
   gap: 20px;
   justify-content: left;
@@ -55,4 +65,10 @@ ion-row {
   margin-top: 16PX;
   margin-bottom: 16px;
   border-radius: 8px;
+}
+
+@media screen and (max-width: 768px) {
+  .options{
+    flex-direction: column;
+  } 
 }
