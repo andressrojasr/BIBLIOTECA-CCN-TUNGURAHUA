@@ -52,15 +52,10 @@ const db = new sqlite3.Database(dbPath, (err) => {
         usuarioId INTEGER,
         fechaPrestamo TEXT,
         fechaDevolucion TEXT,
+        libroId INTEGER,
+        FOREIGN KEY (libroId) REFERENCES books(id),
         FOREIGN KEY (usuarioId) REFERENCES usuarios(id)
       )`,
-      `CREATE TABLE IF NOT EXISTS prestamos_libros (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        prestamoId INTEGER,
-        libroId INTEGER,
-        FOREIGN KEY (prestamoId) REFERENCES prestamos(id),
-        FOREIGN KEY (libroId) REFERENCES books(id)
-      )`
     ];
 
     // Ejecutar todas las sentencias secuencialmente
@@ -69,6 +64,54 @@ const db = new sqlite3.Database(dbPath, (err) => {
         db.run(sql, (err) => {
           if (err) {
             console.error('❌ Error al crear tabla:', err.message);
+          }
+        });
+      });
+      const createTriggers = [
+        `CREATE TRIGGER IF NOT EXISTS trg_prestamo_insert
+        AFTER INSERT ON prestamos
+        BEGIN
+          UPDATE books
+          SET prestados = prestados + 1
+          WHERE id = NEW.libroId;
+        END;`,
+
+        `CREATE TRIGGER IF NOT EXISTS trg_prestamo_delete
+        AFTER DELETE ON prestamos
+        BEGIN
+          UPDATE books
+          SET prestados = prestados - 1
+          WHERE id = OLD.libroId;
+        END;`,
+
+        `CREATE TRIGGER IF NOT EXISTS trg_prestamo_devuelto
+        AFTER UPDATE OF fechaDevolucion ON prestamos
+        WHEN NEW.fechaDevolucion IS NOT NULL AND OLD.fechaDevolucion IS NULL
+        BEGIN
+          UPDATE books
+          SET prestados = prestados - 1
+          WHERE id = NEW.libroId;
+        END;`,
+
+        `CREATE TRIGGER IF NOT EXISTS trg_prestamo_update
+        AFTER UPDATE OF libroId ON prestamos
+        BEGIN
+          UPDATE books
+          SET prestados = prestados - 1
+          WHERE id = OLD.libroId;
+
+          UPDATE books
+          SET prestados = prestados + 1
+          WHERE id = NEW.libroId;
+        END;`,
+      ];
+
+      createTriggers.forEach((sql) => {
+        db.run(sql, (err) => {
+          if (err) {
+            console.error('❌ Error al crear trigger:', err.message);
+          } else {
+            console.log('✅ Trigger creado');
           }
         });
       });
