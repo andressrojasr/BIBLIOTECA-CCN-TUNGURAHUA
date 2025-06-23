@@ -5,11 +5,13 @@ import { IonicModule } from '@ionic/angular';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AddUpdateBookComponent } from './modals/add-update-book/add-update-book.component';
 import { AddUpdateUserComponent } from './modals/add-update-user/add-update-user.component';
+import { AddPrestamoComponent } from './modals/add-prestamo/add-prestamo.component';
+import { SelectUsuarioComponent } from './modals/select-usuario/select-usuario.component';
 
 
 
 @NgModule({
-  declarations: [HeaderComponent, AddUpdateBookComponent, AddUpdateUserComponent],
+  declarations: [HeaderComponent, AddUpdateBookComponent, AddUpdateUserComponent, AddPrestamoComponent, SelectUsuarioComponent],
   imports: [
     CommonModule,
     IonicModule,

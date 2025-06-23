@@ -1,0 +1,83 @@
+<app-header [title]="title" [isModal]="true"></app-header>
+<ion-content [fullscreen]="true">
+    <div class="form-wrapper">
+        <form  class="login-form" [formGroup]="prestamoForm" (ngSubmit)="onSubmit()">
+            <!-- Selector visual para usuario -->
+            <ion-card button (click)="openUsuarioModal()">
+              <ion-card-content>
+                <ion-label class="ion-text-wrap">
+                  <strong>Usuario: </strong>
+                  <div *ngIf="prestamoForm.value.usuario; else noUsuario">
+                    {{ prestamoForm.value.usuario.nombres }} {{ prestamoForm.value.usuario.apellidos }}
+                    <br>
+                    <small>Cédula: {{ prestamoForm.value.usuario.cedula }}</small>
+                    <br>
+                    <small>Correo: {{ prestamoForm.value.usuario.correo }}</small>
+                    <br *ngIf="prestamoForm.value.usuario.celular">
+                    <small *ngIf="prestamoForm.value.usuario.celular">Celular: {{ prestamoForm.value.usuario.celular }}</small>
+                    <br *ngIf="prestamoForm.value.usuario.profesion">
+                    <small *ngIf="prestamoForm.value.usuario.profesion">Profesión: {{ prestamoForm.value.usuario.profesion }}</small>
+                    <br *ngIf="prestamoForm.value.usuario.lugarTrabajo">
+                    <small *ngIf="prestamoForm.value.usuario.lugarTrabajo">Lugar de trabajo: {{ prestamoForm.value.usuario.lugarTrabajo }}</small>
+                    <br>
+                    <small *ngIf="prestamoForm.value.usuario.tipoUsuario == 0">Tipo de usuario: Niño</small>
+                    <small *ngIf="prestamoForm.value.usuario.tipoUsuario == 1">Tipo de usuario: Joven</small>
+                    <small *ngIf="prestamoForm.value.usuario.tipoUsuario == 2">Tipo de usuario: Adulto</small>
+                    <small *ngIf="prestamoForm.value.usuario.tipoUsuario == 3">Tipo de usuario: Adulto mayor</small>
+                    <br>
+                    <small>Edad: {{ prestamoForm.value.usuario.edad }} años</small>
+                    <br>
+                    <small>Dirección:{{ prestamoForm.value.usuario.direccion }}</small>
+                    <br>
+                    <small>Cantón: {{ prestamoForm.value.usuario.canton }}</small>
+                    
+                  </div>
+                  <ng-template #noUsuario>
+                    <ion-text color="medium">Seleccionar usuario</ion-text>
+                  </ng-template>
+                </ion-label>
+              </ion-card-content>
+            </ion-card>
+
+            <!-- Validación -->
+            <ion-text color="danger" *ngIf="prestamoForm.get('usuario')?.touched && prestamoForm.get('usuario')?.invalid">
+              <p class="ion-padding-start">El usuario es requerido</p>
+            </ion-text>
+
+            <!-- Selector visual para libro -->
+            <ion-card button (click)="openLibroModal()">
+              <ion-card-content>
+                <ion-label class="ion-text-wrap">
+                  <strong>Libro: </strong>
+                  <div *ngIf="prestamoForm.value.libro; else noLibro">
+                    {{ prestamoForm.value.libro.titulo }}
+                    <br>
+                    <small>Autor: {{ prestamoForm.value.libro.autor }}</small>
+                  </div>
+                  <ng-template #noLibro>
+                    <ion-text color="medium">Seleccionar libro</ion-text>
+                  </ng-template>
+                </ion-label>
+              </ion-card-content>
+            </ion-card>
+
+            <!-- Validación -->
+            <ion-text color="danger" *ngIf="prestamoForm.get('libro')?.touched && prestamoForm.get('libro')?.invalid">
+              <p class="ion-padding-start">El libro es requerido</p>
+            </ion-text>
+
+            <ion-item>
+              <ion-input placeholder="Fecha de préstamo" fill="outline" formControlName="fechaPrestamo" type="date">
+                <ion-icon slot="start" color="primary" name="book-outline" aria-hidden="true"></ion-icon>
+              </ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="prestamoForm.get('fechaPrestamo')?.touched && prestamoForm.get('prestamo')?.errors?.['required']">
+              <p class="ion-padding-start">La fecha del préstamo es requerida</p>
+            </ion-text>
+
+            <ion-button expand="block" type="submit" [disabled]="prestamoForm.invalid || isProcessing" (click)="onSubmit()" color="tertiary">
+            Agregar Préstamo
+            </ion-button>
+        </form>
+    </div>
+</ion-content>

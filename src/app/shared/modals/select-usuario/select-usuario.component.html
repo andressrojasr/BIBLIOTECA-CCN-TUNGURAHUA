@@ -1,0 +1,38 @@
+<app-header title="Seleccionar Usuario" [isModal]="true"></app-header>
+<ion-content [fullscreen]="true" scrollEvents="true" (ionScroll)="onScroll($event)">
+  <div class="options">
+    <ion-searchbar mode="ios" animated="true" placeholder="Buscar Usuario" [(ngModel)]="searchTerm" (ionInput)="filterUsers()"></ion-searchbar>
+    <ion-select aria-label="Fruit" interface="popover" label="Filtrar por: " value="id" fill="outline" (ionChange)="filterUsers()" [(ngModel)]="selectedFilter">
+          <ion-select-option value="id">Id</ion-select-option>
+          <ion-select-option value="cedula">Cédula</ion-select-option>
+          <ion-select-option value="nombres">Nombres</ion-select-option>
+          <ion-select-option value="apellidos">Apellidos</ion-select-option>
+    </ion-select>
+  </div>
+  <ion-grid class="table">
+    <ion-row class="header-row" >
+      <ion-col size="1" class="first"><strong>Id</strong></ion-col>
+      <ion-col size="5"><strong>Nombres y Apellidos</strong></ion-col>
+      <ion-col size="3"><strong>Cédula</strong></ion-col>
+      <ion-col size="3"><strong>Acción</strong></ion-col>
+    </ion-row>
+
+    <ion-row *ngFor="let user of filteredUsers" class="rows ion-align-items-center">
+      <ion-col size="1" class="first">{{ user.id }}</ion-col>
+      <ion-col size="5">{{ user.nombres }} {{user.apellidos}}</ion-col>
+      <ion-col size="3">{{ user.cedula }}</ion-col>
+      <ion-col size="3">
+        <ion-label color="tertiary" (click)="select(user)">Seleccionar</ion-label>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="padding: 15px;" *ngIf="showScrollToTop">
+    <ion-fab-button color="secondary" (click)="scrollToTop()">
+      <ion-icon name="chevron-up-circle"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMore($event)">
+    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más usuarios...">
+    </ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+</ion-content>

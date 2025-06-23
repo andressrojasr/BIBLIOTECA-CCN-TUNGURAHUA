@@ -13,5 +13,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   insertUser: (user) => ipcRenderer.invoke('insertUser', user),
   updateUser: (user) => ipcRenderer.invoke('updateUser', user),
   deleteUser: (id) => ipcRenderer.invoke('deleteUser', id),
-
+  getPrestamos: (offset, limit) => ipcRenderer.invoke('getPrestamos', offset, limit),
+  insertPrestamo: (prestamo) => ipcRenderer.invoke('insertPrestamo', prestamo),
 });

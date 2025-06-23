@@ -280,3 +280,80 @@ ipcMain.handle('deleteUser', async (event, userId) => {
     });
   });
 });
+
+ipcMain.handle('getPrestamos', async (event, offset, limit) => {
+  return new Promise((resolve, reject) => {
+    db.all(
+      `
+      SELECT p.id, p.fechaPrestamo, p.fechaDevolucion,
+             u.*, b.*
+      FROM prestamos p
+      JOIN usuarios u ON p.usuarioId = u.id
+      JOIN books b ON p.libroId = b.id
+      ORDER BY p.id DESC
+      LIMIT ? OFFSET ?
+      `,
+      [limit, offset],
+      (err, rows) => {
+        if (err) {
+          return reject(err);
+        }
+
+        const prestamos = rows.map(row => ({
+          id: row.id,
+          fechaPrestamo: row.fechaPrestamo,
+          fechaDevolucion: row.fechaDevolucion,
+          usuario: {
+            id: row.usuarioId || row.id, // depende del aliasing de sqlite
+            nombres: row.nombres,
+            apellidos: row.apellidos,
+            cedula: row.cedula,
+            profesion: row.profesion,
+            lugarTrabajo: row.lugarTrabajo,
+            tipoUsuario: row.tipoUsuario,
+            edad: row.edad,
+            direccion: row.direccion,
+            canton: row.canton,
+            celular: row.celular,
+            correo: row.correo,
+          },
+          libro: {
+            id: row.libroId || row.id, // idem arriba
+            titulo: row.titulo,
+            autor: row.autor,
+            estanteria: row.estanteria,
+            fila: row.fila,
+            caja: row.caja,
+            ejemplares: row.ejemplares,
+            prestados: row.prestados
+          }
+        }));
+
+        resolve({ success: true, prestamos });
+      }
+    );
+  });
+});
+
+ipcMain.handle('insertPrestamo', async (event, prestamo) => {
+  return new Promise((resolve, reject) => {
+    const { usuarioId, libroId, fechaPrestamo } = prestamo;
+
+    const fechaDevolucion = calcularFechaDevolucion(fechaPrestamo); // ajusta si tienes otra lógica
+
+    const query = `
+      INSERT INTO prestamos (usuarioId, libroId, fechaPrestamo, fechaDevolucion)
+      VALUES (?, ?, ?, ?)
+    `;
+
+    db.run(query, [usuarioId, libroId, fechaPrestamo, fechaDevolucion], function (err) {
+      if (err) {
+        console.error('❌ Error al insertar préstamo:', err.message);
+        resolve({ success: false });
+      } else {
+        resolve({ success: true, id: this.lastID });
+      }
+    });
+  });
+});
+
