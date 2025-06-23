@@ -53,6 +53,8 @@
                     {{ prestamoForm.value.libro.titulo }}
                     <br>
                     <small>Autor: {{ prestamoForm.value.libro.autor }}</small>
+                    <br>
+                    <small>Código: {{ prestamoForm.value.libro.id }}</small>
                   </div>
                   <ng-template #noLibro>
                     <ion-text color="medium">Seleccionar libro</ion-text>
@@ -67,12 +69,16 @@
             </ion-text>
 
             <ion-item>
-              <ion-input placeholder="Fecha de préstamo" fill="outline" formControlName="fechaPrestamo" type="date">
-                <ion-icon slot="start" color="primary" name="book-outline" aria-hidden="true"></ion-icon>
+              <ion-input placeholder="Fecha de préstamo" fill="outline" formControlName="fechaPrestamo" type="date" readonly>
+                <ion-icon slot="start" color="primary" name="calendar-outline" aria-hidden="true"></ion-icon>
               </ion-input>
             </ion-item>
             <ion-text color="danger" *ngIf="prestamoForm.get('fechaPrestamo')?.touched && prestamoForm.get('prestamo')?.errors?.['required']">
               <p class="ion-padding-start">La fecha del préstamo es requerida</p>
+            </ion-text>
+
+            <ion-text color="danger" *ngIf="prestamoForm.get('fechaPrestamo')?.touched && prestamoForm.get('fechaPrestamo')?.errors?.['fechaInvalida']">
+              <p class="ion-padding-start">La fecha no puede ser anterior a la fecha actual</p>
             </ion-text>
 
             <ion-button expand="block" type="submit" [disabled]="prestamoForm.invalid || isProcessing" (click)="onSubmit()" color="tertiary">

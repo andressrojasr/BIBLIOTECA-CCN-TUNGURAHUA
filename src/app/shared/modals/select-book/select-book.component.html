@@ -1,0 +1,38 @@
+<app-header title="Seleccionar Libro" [isModal]="true"></app-header>
+<ion-content [fullscreen]="true" scrollEvents="true" (ionScroll)="onScroll($event)">
+  <div class="options">
+    <ion-searchbar mode="ios" animated="true" placeholder="Buscar Libro" [(ngModel)]="searchTerm" (ionInput)="filterBooks()"></ion-searchbar>
+    <ion-select aria-label="Fruit" interface="popover" label="Filtrar por: " value="id" fill="outline" (ionChange)="filterBooks()" [(ngModel)]="selectedFilter">
+          <ion-select-option value="id">Código</ion-select-option>
+          <ion-select-option value="titulo">Título</ion-select-option>
+          <ion-select-option value="autor">Autor</ion-select-option>
+    </ion-select>
+  </div>
+  <ion-grid class="table">
+    <ion-row class="header-row" >
+      <ion-col size="3" class="first"><strong>Código</strong></ion-col>
+      <ion-col size="3"><strong>Título</strong></ion-col>
+      <ion-col size="3"><strong>Autor</strong></ion-col>
+      <ion-col size="3"><strong>Acción</strong></ion-col>
+    </ion-row>
+
+    <ion-row *ngFor="let book of filteredBooks" class="rows ion-align-items-center">
+      <ion-col size="3" class="first">{{ book.id }}</ion-col>
+      <ion-col size="3">{{ book.titulo }}</ion-col>
+      <ion-col size="3">{{ book.autor }}</ion-col>
+      <ion-col size="3">
+        <ion-label color="tertiary" (click)="select(book)" *ngIf="book.ejemplares - book.prestados != 0" button>Seleccionar</ion-label>
+        <ion-badge mode="ios" color="primary" *ngIf="book.ejemplares - book.prestados == 0">No Disponible</ion-badge>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="padding: 15px;" *ngIf="showScrollToTop">
+    <ion-fab-button color="secondary" (click)="scrollToTop()">
+      <ion-icon name="chevron-up-circle"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMore($event)">
+    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más usuarios...">
+    </ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+</ion-content>

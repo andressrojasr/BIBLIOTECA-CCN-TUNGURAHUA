@@ -7,11 +7,13 @@ import { AddUpdateBookComponent } from './modals/add-update-book/add-update-book
 import { AddUpdateUserComponent } from './modals/add-update-user/add-update-user.component';
 import { AddPrestamoComponent } from './modals/add-prestamo/add-prestamo.component';
 import { SelectUsuarioComponent } from './modals/select-usuario/select-usuario.component';
+import { SelectBookComponent } from './modals/select-book/select-book.component';
+import { InfoPrestamoComponent } from './modals/info-prestamo/info-prestamo.component';
 
 
 
 @NgModule({
-  declarations: [HeaderComponent, AddUpdateBookComponent, AddUpdateUserComponent, AddPrestamoComponent, SelectUsuarioComponent],
+  declarations: [HeaderComponent, AddUpdateBookComponent, AddUpdateUserComponent, AddPrestamoComponent, SelectUsuarioComponent, SelectBookComponent, InfoPrestamoComponent],
   imports: [
     CommonModule,
     IonicModule,

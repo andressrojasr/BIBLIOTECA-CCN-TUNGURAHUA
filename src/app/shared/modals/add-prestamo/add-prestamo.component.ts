@@ -1,9 +1,9 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { ModalController, ToastController } from '@ionic/angular';
 import { Prestamo } from 'src/app/models/prestamo.model';
 import { SelectUsuarioComponent } from '../select-usuario/select-usuario.component';
-import { UtilsService } from 'src/app/services/utils.service';
+import { SelectBookComponent } from '../select-book/select-book.component';
 
 @Component({
   selector: 'app-add-prestamo',
@@ -29,13 +29,13 @@ export class AddPrestamoComponent  implements OnInit {
         id: ['', []],
         usuario: [, [Validators.required]],
         libro: [, [Validators.required]],
-        fechaPrestamo: ['', [Validators.required]],
-        fechaDevolucion: ['', [Validators.required]],
+        fechaPrestamo: [this.getTodayDate(), [Validators.required, this.notBeforeTodayValidator]],
+        fechaDevolucion: [''],
       });
     }
   
     ngOnInit() {
-      this.title = 'Añadir Préstamo';
+      this.title = 'Agregar Préstamo';
     }
   
     async onSubmit() {
@@ -45,7 +45,6 @@ export class AddPrestamoComponent  implements OnInit {
         const formData = this.prestamoForm.value;
         let prestamoData: any;
         prestamoData = {
-          id: formData.id,
           usuarioId: formData.usuario.id,
           libroId: formData.libro.id,
           fechaPrestamo: formData.fechaPrestamo,
@@ -107,5 +106,41 @@ export class AddPrestamoComponent  implements OnInit {
         toast.present();
       }
     }
-    openLibroModal() {}
+
+    async openLibroModal() {
+      const modal = await this.modalCtrl.create({
+        component: SelectBookComponent,
+        cssClass: 'add-update-modal'
+      });
+
+      await modal.present();
+
+      const { data } = await modal.onWillDismiss();
+
+      if (data) {
+        this.prestamoForm.patchValue({ libro: data });
+        const toast = await this.toastCtrl.create({
+          message: 'Libro seleccionado con éxito',
+          duration: 3000,
+          color: 'success'
+        });
+        toast.present();
+      }
+    }
+
+  private getTodayDate(): string {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  }
+
+  notBeforeTodayValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+
+    const [year, month, day] = control.value.split('-').map(Number);
+    const selectedDate = new Date(year, month - 1, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return selectedDate < today ? { fechaInvalida: true } : null;
+  }
 }

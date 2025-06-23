@@ -3,6 +3,7 @@ import { AlertController, IonContent, ToastController } from '@ionic/angular';
 import { UtilsService } from '../services/utils.service';
 import { Prestamo } from '../models/prestamo.model';
 import { AddPrestamoComponent } from '../shared/modals/add-prestamo/add-prestamo.component';
+import { InfoPrestamoComponent } from '../shared/modals/info-prestamo/info-prestamo.component';
 
 @Component({
   selector: 'app-tab1',
@@ -40,14 +41,26 @@ export class Tab1Page {
 
 
   async editPrestamo(prestamo: Prestamo) {
-    
+    let success = await this.utils.presentModal({
+          component: InfoPrestamoComponent,
+          cssClass: 'add-update-modal',
+          componentProps: { prestamo }
+        })
+        if (success) {
+          this.loadMore()
+          const toast = await this.toastCtrl.create({
+              message: 'Préstamo finalizado con exito',
+              duration: 3000,
+              color: 'success'
+            });
+          toast.present()
+        };
   }
   
   async addPrestamo(){
     let success = await this.utils.presentModal({
       component: AddPrestamoComponent,
       cssClass: 'add-update-modal',
-      componentProps: {  }
     })
     if (success) 'Agregado con exito';
   }
@@ -60,6 +73,7 @@ export class Tab1Page {
     const result = await window.electronAPI.getPrestamos(this.offset, this.limit);
     this.prestamos = [...this.prestamos, ...result.prestamos];
     this.filteredPrestamos = this.prestamos
+    console.log(this.prestamos)
     this.offset += this.limit;
     this.loading = false;
 
@@ -72,7 +86,7 @@ export class Tab1Page {
 
   async confirmDelete(prestamo: Prestamo) {
     const alert = await this.alertCtrl.create({
-      header: '¿Eliminar libro?',
+      header: '¿Eliminar préstamo?',
       message: `¿Estás seguro de eliminar el prestamo ${prestamo.id}?`,
       buttons: [
         {
@@ -90,20 +104,20 @@ export class Tab1Page {
     await alert.present();
   }
 
-  async deletePrestamo(bookId: number) {
+  async deletePrestamo(prestamoId: number) {
     try {
-      const result = await window.electronAPI.deleteBook(bookId);
+      const result = await window.electronAPI.deletePrestamo(prestamoId);
       if (result.success) {
         this.loadMore();
         const toast = await this.toastCtrl.create({
-          message: 'Libro Eliminado exitosamente',
+          message: 'Préstamo eliminado exitosamente',
           duration: 3000,
           color: 'success'
         });
         await toast.present();
       } else {
         const toast = await this.toastCtrl.create({
-          message: 'Error al eliminar el libro',
+          message: 'Error al eliminar el préstamo',
           duration: 2000,
           color: 'danger'
         });
@@ -114,8 +128,8 @@ export class Tab1Page {
     }
   }
 
-  async filterBooks(reset: boolean = true) {
-  console.log('Filtrando libros con término:', this.searchTerm, 'y filtro:', this.selectedFilter);
+  async filterPrestamos(reset: boolean = true) {
+  console.log('Filtrando préstamos con término:', this.searchTerm, 'y filtro:', this.selectedFilter);
 
   const searchTerm = this.searchTerm.trim().toLowerCase();
 
@@ -135,19 +149,19 @@ export class Tab1Page {
   this.loading = true;
 
   try {
-    const result = await window.electronAPI.getBook(this.offset, this.limit, this.selectedFilter, searchTerm);
+    const result = await window.electronAPI.getPrestamo(this.offset, this.limit, this.selectedFilter, searchTerm);
 
-    const newBooks = result.prestamos || [];
+    const newPrestamos = result.prestamos || [];
 
     // Concatenar si no es reset
-    this.prestamos = reset ? newBooks : [...this.prestamos, ...newBooks];
+    this.prestamos = reset ? newPrestamos : [...this.prestamos, ...newPrestamos];
     this.filteredPrestamos = this.prestamos;
 
     // Aumenta el offset para la próxima carga
     this.offset += this.limit;
   } catch (error) {
     const toast = await this.toastCtrl.create({
-      message: 'Error al buscar libro: ' + error,
+      message: 'Error al buscar préstamo: ' + error,
       duration: 2000,
       color: 'danger'
     });

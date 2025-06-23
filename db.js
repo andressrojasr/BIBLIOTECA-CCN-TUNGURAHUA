@@ -84,6 +84,15 @@ const db = new sqlite3.Database(dbPath, (err) => {
           WHERE id = OLD.libroId;
         END;`,
 
+        `CREATE TRIGGER IF NOT EXISTS trg_prestamo_devuelto
+        AFTER UPDATE OF fechaDevolucion ON prestamos
+        WHEN NEW.fechaDevolucion IS NOT NULL AND OLD.fechaDevolucion IS NULL
+        BEGIN
+          UPDATE books
+          SET prestados = prestados - 1
+          WHERE id = NEW.libroId;
+        END;`,
+
         `CREATE TRIGGER IF NOT EXISTS trg_prestamo_update
         AFTER UPDATE OF libroId ON prestamos
         BEGIN

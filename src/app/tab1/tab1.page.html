@@ -2,8 +2,8 @@
 
 <ion-content [fullscreen]="true" scrollEvents="true" (ionScroll)="onScroll($event)">
   <div class="options">
-    <ion-searchbar mode="ios" animated="true" placeholder="Buscar Préstamo" [(ngModel)]="searchTerm" (ionInput)="filterBooks()"></ion-searchbar>
-        <ion-select aria-label="Fruit" interface="popover" label="Filtrar por: " value="id" fill="outline" (ionChange)="filterBooks()" [(ngModel)]="selectedFilter">
+    <ion-searchbar mode="ios" animated="true" placeholder="Buscar Préstamo" [(ngModel)]="searchTerm" (ionInput)="filterPrestamos()"></ion-searchbar>
+        <ion-select aria-label="Fruit" interface="popover" label="Filtrar por: " value="id" fill="outline" (ionChange)="filterPrestamos()" [(ngModel)]="selectedFilter">
           <ion-select-option value="id">Código</ion-select-option>
           <ion-select-option value="cedula">Cédula</ion-select-option>
           <ion-select-option value="nombres">Nombres</ion-select-option>
@@ -28,17 +28,17 @@
 
     <ion-row *ngFor="let prestamo of filteredPrestamos" class="rows ion-align-items-center">
       <ion-col size="1" class="first">{{ prestamo.id }}</ion-col>
-      <ion-col size="3">Titulo: {{ prestamo.libro.titulo }} - Código: {{prestamo.libro.id}}</ion-col>
-      <ion-col size="2">Nombre: {{ prestamo.usuario.apellidos + " " + prestamo.usuario.nombres }} - Cédula: {{prestamo.usuario.cedula}} </ion-col>
+      <ion-col size="3">{{ prestamo.libro.titulo }} - {{prestamo.libro.id}}</ion-col>
+      <ion-col size="2">{{ prestamo.usuario.apellidos + " " + prestamo.usuario.nombres }} - {{prestamo.usuario.cedula}} </ion-col>
       <ion-col size="1.5"> {{ prestamo.fechaPrestamo }}</ion-col>
       <ion-col size="1.5">{{ prestamo.fechaDevolucion }}</ion-col>
-      <ion-col size="1" *ngIf="!prestamo.fechaDevolucion"><ion-badge mode="ios">Activo</ion-badge></ion-col>
+      <ion-col size="1" *ngIf="!prestamo.fechaDevolucion"><ion-badge mode="ios" color="tertiary">Activo</ion-badge></ion-col>
       <ion-col size="1" *ngIf="prestamo.fechaDevolucion"><ion-badge mode="ios">Finalizado</ion-badge></ion-col>
       <ion-col size="2">
         <ion-button color="tertiary" shape="round" (click)="editPrestamo(prestamo)">
           <ion-icon name="create-outline"></ion-icon>
         </ion-button>
-        <ion-button color="primary" shape="round" (click)="confirmDelete(prestamo)">
+        <ion-button color="primary" shape="round"  (click)="confirmDelete(prestamo)" *ngIf="!prestamo.fechaDevolucion">
           <ion-icon name="trash-outline"></ion-icon>
         </ion-button>
       </ion-col>

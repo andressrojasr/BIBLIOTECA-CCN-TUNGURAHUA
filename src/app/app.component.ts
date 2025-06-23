@@ -15,7 +15,10 @@ declare global {
       updateUser: (user: any) => Promise<any>;
       deleteUser: (userId: number) => Promise<any>;
       getPrestamos: (offset: number, limit: number) => Promise<any>;
+      getPrestamo: (offset: number, limit: number, filterColumn: string, searchTerm: string) => Promise<any>;
       insertPrestamo: (prestamo: any) => Promise<any>;
+      updatePrestamo: (fechaDevolucion: any, id: number) => Promise<any>;
+      deletePrestamo: (prestamoId: number) => Promise<any>;
     };
   }
 }

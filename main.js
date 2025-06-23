@@ -285,8 +285,8 @@ ipcMain.handle('getPrestamos', async (event, offset, limit) => {
   return new Promise((resolve, reject) => {
     db.all(
       `
-      SELECT p.id, p.fechaPrestamo, p.fechaDevolucion,
-             u.*, b.*
+      SELECT p.id as prestamoId, p.fechaPrestamo, p.fechaDevolucion,
+             u.*, u.id as usuarioId, b.*, b.id as libroId
       FROM prestamos p
       JOIN usuarios u ON p.usuarioId = u.id
       JOIN books b ON p.libroId = b.id
@@ -300,11 +300,11 @@ ipcMain.handle('getPrestamos', async (event, offset, limit) => {
         }
 
         const prestamos = rows.map(row => ({
-          id: row.id,
+          id: row.prestamoId,
           fechaPrestamo: row.fechaPrestamo,
           fechaDevolucion: row.fechaDevolucion,
           usuario: {
-            id: row.usuarioId || row.id, // depende del aliasing de sqlite
+            id: row.usuarioId, // depende del aliasing de sqlite
             nombres: row.nombres,
             apellidos: row.apellidos,
             cedula: row.cedula,
@@ -318,7 +318,7 @@ ipcMain.handle('getPrestamos', async (event, offset, limit) => {
             correo: row.correo,
           },
           libro: {
-            id: row.libroId || row.id, // idem arriba
+            id: row.libroId, // idem arriba
             titulo: row.titulo,
             autor: row.autor,
             estanteria: row.estanteria,
@@ -335,18 +335,91 @@ ipcMain.handle('getPrestamos', async (event, offset, limit) => {
   });
 });
 
+ipcMain.handle('getPrestamo', async (event, offset, limit, filterColumn, searchTerm) => {
+  return new Promise((resolve, reject) => {
+    // Mapear filtro de frontend a columna de la consulta
+    let column;
+    switch (filterColumn) {
+      case 'id':
+        column = 'p.id';
+        break;
+      case 'cedula':
+        column = 'u.cedula';
+        break;
+      case 'nombres':
+        column = 'u.nombres';
+        break;
+      case 'apellidos':
+        column = 'u.apellidos';
+        break;
+      case 'libro':
+        column = 'b.titulo';
+        break;
+      default:
+        column = 'p.id';
+    }
+
+    const sql = `
+      SELECT p.id as prestamoId, p.fechaPrestamo, p.fechaDevolucion,
+             u.*, u.id as usuarioId, b.*, b.id as libroId
+      FROM prestamos p
+      JOIN usuarios u ON p.usuarioId = u.id
+      JOIN books b ON p.libroId = b.id
+      WHERE ${column} LIKE ?
+      ORDER BY p.id DESC
+      LIMIT ? OFFSET ?`;
+
+    db.all(sql, [`%${searchTerm}%`, limit, offset], (err, rows) => {
+      if (err) {
+        return reject(err);
+      }
+
+      const prestamos = rows.map(row => ({
+        id: row.prestamoId,
+        fechaPrestamo: row.fechaPrestamo,
+        fechaDevolucion: row.fechaDevolucion,
+        usuario: {
+          id: row.usuarioId,
+          nombres: row.nombres,
+          apellidos: row.apellidos,
+          cedula: row.cedula,
+          profesion: row.profesion,
+          lugarTrabajo: row.lugarTrabajo,
+          tipoUsuario: row.tipoUsuario,
+          edad: row.edad,
+          direccion: row.direccion,
+          canton: row.canton,
+          celular: row.celular,
+          correo: row.correo,
+        },
+        libro: {
+          id: row.libroId,
+          titulo: row.titulo,
+          autor: row.autor,
+          estanteria: row.estanteria,
+          fila: row.fila,
+          caja: row.caja,
+          ejemplares: row.ejemplares,
+          prestados: row.prestados,
+        },
+      }));
+
+      resolve({ success: true, prestamos });
+    });
+  });
+});
+
+
 ipcMain.handle('insertPrestamo', async (event, prestamo) => {
   return new Promise((resolve, reject) => {
     const { usuarioId, libroId, fechaPrestamo } = prestamo;
 
-    const fechaDevolucion = calcularFechaDevolucion(fechaPrestamo); // ajusta si tienes otra lógica
-
     const query = `
-      INSERT INTO prestamos (usuarioId, libroId, fechaPrestamo, fechaDevolucion)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO prestamos (usuarioId, libroId, fechaPrestamo)
+      VALUES (?, ?, ?)
     `;
 
-    db.run(query, [usuarioId, libroId, fechaPrestamo, fechaDevolucion], function (err) {
+    db.run(query, [usuarioId, libroId, fechaPrestamo], function (err) {
       if (err) {
         console.error('❌ Error al insertar préstamo:', err.message);
         resolve({ success: false });
@@ -357,3 +430,32 @@ ipcMain.handle('insertPrestamo', async (event, prestamo) => {
   });
 });
 
+ipcMain.handle('updatePrestamo', async (event, fechaDevolucion, id) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      UPDATE prestamos
+      SET fechaDevolucion = ?
+      WHERE id = ?
+    `;
+
+    db.run(query, [fechaDevolucion, id], function (err) {
+      if (err) {
+        reject({ success: false, message: 'Error al finalizar el préstamo', error: err });
+      } else {
+        resolve({ success: true, message: 'Préstamo finalizado correctamente' });
+      }
+    });
+  });
+});
+
+ipcMain.handle('deletePrestamo', async (event, prestamoId) => {
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM prestamos WHERE id = ?`, [prestamoId], function (err) {
+      if (err) {
+        reject({ success: false, message: 'Error al eliminar prestamo', error: err });
+      } else {
+        resolve({ success: true, message: 'Préstamo eliminado correctamente' });
+      }
+    });
+  });
+});

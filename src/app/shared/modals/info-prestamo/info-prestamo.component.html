@@ -1,0 +1,65 @@
+<app-header [title]="title" [isModal]="true"></app-header>
+<ion-content [fullscreen]="true">
+    <div class="form-wrapper">
+            <!-- Selector visual para usuario -->
+            <ion-card>
+              <ion-card-content>
+                <ion-label class="ion-text-wrap">
+                  <strong>Usuario: </strong>
+                  <div *ngIf="prestamo.usuario; else noUsuario">
+                    {{ prestamo.usuario.nombres }} {{ prestamo.usuario.apellidos }}
+                    <br>
+                    <small>Cédula: {{ prestamo.usuario.cedula }}</small>
+                    <br>
+                    <small>Correo: {{ prestamo.usuario.correo }}</small>
+                    <br *ngIf="prestamo.usuario.celular">
+                    <small *ngIf="prestamo.usuario.celular">Celular: {{ prestamo.usuario.celular }}</small>
+                    <br *ngIf="prestamo.usuario.profesion">
+                    <small *ngIf="prestamo.usuario.profesion">Profesión: {{ prestamo.usuario.profesion }}</small>
+                    <br *ngIf="prestamo.usuario.lugarTrabajo">
+                    <small *ngIf="prestamo.usuario.lugarTrabajo">Lugar de trabajo: {{ prestamo.usuario.lugarTrabajo }}</small>
+                    <br>
+                    <small *ngIf="prestamo.usuario.tipoUsuario == 0">Tipo de usuario: Niño</small>
+                    <small *ngIf="prestamo.usuario.tipoUsuario == 1">Tipo de usuario: Joven</small>
+                    <small *ngIf="prestamo.usuario.tipoUsuario == 2">Tipo de usuario: Adulto</small>
+                    <small *ngIf="prestamo.usuario.tipoUsuario == 3">Tipo de usuario: Adulto mayor</small>
+                    <br>
+                    <small>Edad: {{ prestamo.usuario.edad }} años</small>
+                    <br>
+                    <small>Dirección:{{ prestamo.usuario.direccion }}</small>
+                    <br>
+                    <small>Cantón: {{ prestamo.usuario.canton }}</small>
+                    
+                  </div>
+                  <ng-template #noUsuario>
+                    <ion-text color="medium">Seleccionar usuario</ion-text>
+                  </ng-template>
+                </ion-label>
+              </ion-card-content>
+            </ion-card>
+
+            <!-- Selector visual para libro -->
+            <ion-card>
+              <ion-card-content>
+                <ion-label class="ion-text-wrap">
+                  <strong>Libro: </strong>
+                  <div *ngIf="prestamo.libro; else noLibro">
+                    {{ prestamo.libro.titulo }}
+                    <br>
+                    <small>Autor: {{ prestamo.libro.autor }}</small>
+                    <br>
+                    <small>Código: {{ prestamo.libro.id }}</small>
+                  </div>
+                  <ng-template #noLibro>
+                    <ion-text color="medium">Seleccionar libro</ion-text>
+                  </ng-template>
+                </ion-label>
+              </ion-card-content>
+            </ion-card>
+
+
+            <ion-button *ngIf="!prestamo.fechaDevolucion" expand="block" type="submit" [disabled]="isProcessing" (click)="onSubmit()" color="tertiary">
+            Finalizar Préstamo
+            </ion-button>
+    </div>
+</ion-content>
