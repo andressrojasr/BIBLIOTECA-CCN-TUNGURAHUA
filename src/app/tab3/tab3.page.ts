@@ -115,14 +115,19 @@ export class Tab3Page {
         this.loadMore(); // Recargar la lista de usuarios
       } else {
         const toast = await this.toastCtrl.create({
-          message: 'Error al eliminar el usuario',
+          message: result.message || 'Error al eliminar el usuario',
           duration: 2000,
           color: 'danger'
         });
         await toast.present();
       }
     } catch (err) {
-      console.error('❌ Error al eliminar el usuario:', err);
+      const toast = await this.toastCtrl.create({
+          message: 'Error al eliminar el usuario' + err,
+          duration: 2000,
+          color: 'danger'
+        });
+        await toast.present();
     }
   }
 

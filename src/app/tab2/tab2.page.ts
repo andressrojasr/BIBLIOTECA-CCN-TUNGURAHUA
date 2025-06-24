@@ -125,14 +125,19 @@ export class Tab2Page{
         await toast.present();
       } else {
         const toast = await this.toastCtrl.create({
-          message: 'Error al eliminar el libro',
+          message: result.message || 'Error al eliminar el libro',
           duration: 2000,
           color: 'danger'
         });
         await toast.present();
       }
     } catch (err) {
-      console.error('❌ Error al eliminar el libro:', err);
+      const toast = await this.toastCtrl.create({
+          message: 'Error al eliminar el libro: ' + err,
+          duration: 2000,
+          color: 'danger'
+        });
+        await toast.present();
     }
   }
 

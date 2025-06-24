@@ -17,5 +17,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPrestamo: (offset, limit, filterColumn, searchTerm) => ipcRenderer.invoke('getPrestamo', offset, limit, filterColumn, searchTerm),
   insertPrestamo: (prestamo) => ipcRenderer.invoke('insertPrestamo', prestamo),
   updatePrestamo: (fechaDevolucion, id) => ipcRenderer.invoke('updatePrestamo', fechaDevolucion, id),
-  deletePrestamo: (prestamoId) => ipcRenderer.invoke('deletePrestamo', prestamoId)
+  deletePrestamo: (prestamoId) => ipcRenderer.invoke('deletePrestamo', prestamoId),
+  changePassword: (passwordActual, passwordNueva) => ipcRenderer.invoke('changePassword', passwordActual, passwordNueva),
+  exportDatabase: () => ipcRenderer.invoke('exportDatabase'),
+  importDatabase: () => ipcRenderer.invoke('importDatabase'),
 });
