@@ -12,7 +12,9 @@
     "electron-dev": "cross-env NODE_ENV=development electron .",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "dist": "npm run build && npm run postbuild && electron-builder",
+    "dist:win": "npm run build && npm run postbuild && electron-builder --win"
   },
   "private": true,
   "dependencies": {
@@ -57,6 +59,7 @@
     "@typescript-eslint/parser": "^8.18.0",
     "cross-env": "^7.0.3",
     "electron": "^36.2.1",
+    "electron-builder": "^26.0.12",
     "electron-reload": "^2.0.0-alpha.1",
     "eslint": "^9.16.0",
     "eslint-plugin-import": "^2.29.1",
@@ -71,5 +74,20 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "~5.6.3"
   },
-  "description": "An Ionic project"
+  "description": "An Ionic project",
+  "build": {
+  "appId": "com.ccn.tungurahua",
+  "productName": "Biblioteca CCE Tungurahua",
+  "files": [
+    "www/**/*",
+    "main.js",
+    "preload.js",
+    "db.js",
+    "node_modules/**/*"
+  ],
+  "win": {
+    "target": "nsis",
+    "icon": "src/assets/Logo Colores.png"
+  }
+}
 }

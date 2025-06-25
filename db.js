@@ -1,15 +1,12 @@
 const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
+const { app } = require('electron'); // 👈 Asegúrate de importar app
 
-// Ruta de la base de datos (junto al ejecutable o en carpeta específica)
-const dbPath = path.join(__dirname, 'data', 'app.db');
-
-// Crea carpeta si no existe
-const dirPath = path.dirname(dbPath);
-if (!fs.existsSync(dirPath)) {
-  fs.mkdirSync(dirPath, { recursive: true });
-}
+const isDev = process.env.NODE_ENV === 'development';
+const dbPath = isDev 
+  ? path.join(__dirname, 'data', 'app.db') // <-- Aquí para DEV
+  : path.join(app.getPath('userData'), 'app.db');
 
 // Conecta a la base
 const db = new sqlite3.Database(dbPath, (err) => {

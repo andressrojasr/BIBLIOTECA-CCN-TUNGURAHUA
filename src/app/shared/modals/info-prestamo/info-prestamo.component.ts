@@ -1,5 +1,5 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
-import { ToastController } from '@ionic/angular';
+import { ModalController, ToastController } from '@ionic/angular';
 import { Prestamo } from 'src/app/models/prestamo.model';
 
 @Component({
@@ -18,7 +18,7 @@ export class InfoPrestamoComponent  implements OnInit {
     isProcessing = false;
     
   
-    constructor() {
+    constructor(private modalController: ModalController) {
     }
   
     ngOnInit() {
@@ -39,6 +39,7 @@ export class InfoPrestamoComponent  implements OnInit {
                 color: 'success'
               });
               await toast.present();
+              this.modalController.dismiss(true);
             } else {
               let message ='Error al finalizar el préstamo'
               const toast = await this.toastCtrl.create({

@@ -44,6 +44,10 @@ export class ConfigPage implements OnInit {
           text: 'Guardar',
           handler: (data) => {
             if (data.password === data.confirmPassword) {
+              if (data.password.length < 5) {
+                this.mostrarToast('La contraseña debe tener al menos 5 caracteres');
+                return false;
+              }
               this.changePassword(data.oldPassword, data.password);
               return true;
             } else {

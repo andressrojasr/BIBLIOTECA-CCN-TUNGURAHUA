@@ -3,14 +3,20 @@ const path = require('path');
 const { ipcMain, dialog } = require('electron');
 const fs = require('fs');
 const db = require('./db');
-require('electron-reload')(__dirname, {
-  electron: require(`${__dirname}/node_modules/electron`)
-});
+
+if (process.env.NODE_ENV === 'development') {
+  require('electron-reload')(__dirname, {
+    electron: require(`${__dirname}/node_modules/electron`)
+  });
+}
 
 function createWindow () {
   const win = new BrowserWindow({
     width: 1280,
     height: 1280,
+    icon: path.join(__dirname, '/src/assets', 'Logo Colores.png'),
+    frame: true,
+    resizable: false,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: true,
@@ -20,11 +26,12 @@ function createWindow () {
   const isDev = process.env.NODE_ENV === 'development';
   if (isDev) {
     win.loadURL('http://localhost:4200');
+    win.maximize();
   }
   else{
     win.loadFile(path.join(__dirname, 'www/index.html'));
+    win.maximize();
   }
-  win.webContents.openDevTools();
 }
 
 
@@ -524,7 +531,10 @@ ipcMain.handle('changePassword', async (event, passwordActual, passwordNueva ) =
   });
 });
 
-const dbPath = path.join(__dirname, 'data', 'app.db');
+const isDev = process.env.NODE_ENV === 'development';
+const dbPath = isDev
+  ? path.join(__dirname, 'data', 'app.db')
+  : path.join(app.getPath('userData'), 'app.db');
 
 ipcMain.handle('exportDatabase', async (event) => {
   const { canceled, filePath } = await dialog.showSaveDialog({

@@ -1,6 +1,6 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToastController } from '@ionic/angular';
+import { ModalController, ToastController } from '@ionic/angular';
 import { User } from 'src/app/models/user.model';
 
 @Component({
@@ -21,7 +21,7 @@ export class AddUpdateUserComponent  implements OnInit {
   isProcessing = false;
   
 
-  constructor() {
+  constructor(private modalController: ModalController) {
     this.userForm = this.fb.group({
       nombres: ['', [Validators.required]],
       apellidos: ['', [Validators.required]],
@@ -94,12 +94,7 @@ export class AddUpdateUserComponent  implements OnInit {
     try {
           const response = await window.electronAPI.insertUser(user);
           if (response.success) {
-            const toast = await this.toastCtrl.create({
-              message: 'Usuario agregado exitosamente',
-              duration: 3000,
-              color: 'success'
-            });
-            await toast.present();
+            this.modalController.dismiss({ success: true });
           } else {
             const toast = await this.toastCtrl.create({
               message: 'Error al agregar el usuario',
@@ -129,6 +124,7 @@ export class AddUpdateUserComponent  implements OnInit {
           color: 'success'
         });
         await toast.present();
+        this.modalController.dismiss({ success: true });
       } else {
         const toast = await this.toastCtrl.create({
           message: 'Error al editar el usuario',

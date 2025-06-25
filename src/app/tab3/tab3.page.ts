@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { AlertController, IonContent, ToastController } from '@ionic/angular';
 import { UtilsService } from '../services/utils.service';
 import { User } from '../models/user.model';
@@ -14,7 +14,7 @@ export class Tab3Page {
 
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
-  constructor(private utils: UtilsService, private toastCtrl: ToastController, private alertCtrl: AlertController) {
+  constructor(private utils: UtilsService, private toastCtrl: ToastController, private alertCtrl: AlertController, private cdr: ChangeDetectorRef) {
     this.loadMore();
   }
 
@@ -45,13 +45,11 @@ export class Tab3Page {
       componentProps: { user }
     })
     if (success) {
-      this.loadMore()
-      const toast = await this.toastCtrl.create({
-          message: 'Usuario editado con exito',
-          duration: 3000,
-          color: 'success'
-        });
-      toast.present()
+      this.offset = 0;
+      this.users = [];
+      this.filteredUsers = [];
+      await this.loadMore();
+      this.cdr.detectChanges();     
     };
   }
   
@@ -61,7 +59,19 @@ export class Tab3Page {
       cssClass: 'add-update-modal',
       componentProps: {  }
     })
-    if (success) 'Agregado con exito';
+    if (success) {
+      const toast = await this.toastCtrl.create({
+        message: 'Usuario agregado con éxito',
+        duration: 3000,
+        color: 'success'
+      });
+      toast.present()
+      this.offset = 0;
+      this.users = [];
+      this.filteredUsers = [];
+      await this.loadMore();
+      this.cdr.detectChanges();
+    } 
   }
 
   async loadMore(event?: any) {
@@ -75,10 +85,11 @@ export class Tab3Page {
     this.offset += this.limit;
     this.loading = false;
 
-    event.target.complete();
-
-    if (result.books.length < this.limit) {
-      event.target.disabled = true; // No hay más libros
+    if (event) {
+      event.target.complete();
+      if (result.users.length < this.limit) {
+        event.target.disabled = true;
+      }
     }
   }
 
@@ -112,7 +123,11 @@ export class Tab3Page {
           color: 'success'
         });
         await toast.present();
-        this.loadMore(); // Recargar la lista de usuarios
+        this.offset = 0;
+        this.users = [];
+        this.filteredUsers = [];
+        await this.loadMore();
+        this.cdr.detectChanges();
       } else {
         const toast = await this.toastCtrl.create({
           message: result.message || 'Error al eliminar el usuario',
