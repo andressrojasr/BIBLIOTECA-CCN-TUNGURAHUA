@@ -19,6 +19,9 @@ declare global {
       insertPrestamo: (prestamo: any) => Promise<any>;
       updatePrestamo: (fechaDevolucion: any, id: number) => Promise<any>;
       deletePrestamo: (prestamoId: number) => Promise<any>;
+      changePassword: (passwordActual: string, passwordNueva: string) => Promise<any>;
+      importDatabase: () => Promise<any>;
+      exportDatabase: () => Promise<any>;
     };
   }
 }

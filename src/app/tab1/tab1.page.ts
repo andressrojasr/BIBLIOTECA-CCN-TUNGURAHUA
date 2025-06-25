@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { AlertController, IonContent, ToastController } from '@ionic/angular';
 import { UtilsService } from '../services/utils.service';
 import { Prestamo } from '../models/prestamo.model';
@@ -15,7 +15,7 @@ export class Tab1Page {
 
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
-  constructor(private utils: UtilsService, private toastCtrl: ToastController, private alertCtrl: AlertController) {
+  constructor(private utils: UtilsService, private toastCtrl: ToastController, private alertCtrl: AlertController, private cdr: ChangeDetectorRef) {
     this.loadMore();
   }
 
@@ -47,13 +47,17 @@ export class Tab1Page {
           componentProps: { prestamo }
         })
         if (success) {
-          this.loadMore()
           const toast = await this.toastCtrl.create({
               message: 'Préstamo finalizado con exito',
               duration: 3000,
               color: 'success'
             });
           toast.present()
+          this.offset = 0;
+          this.prestamos = [];
+          this.filteredPrestamos = [];
+          await this.loadMore();
+          this.cdr.detectChanges();
         };
   }
   
@@ -62,7 +66,13 @@ export class Tab1Page {
       component: AddPrestamoComponent,
       cssClass: 'add-update-modal',
     })
-    if (success) 'Agregado con exito';
+    if (success) {
+      this.offset = 0;
+      this.prestamos = [];
+      this.filteredPrestamos = [];
+      await this.loadMore();
+      this.cdr.detectChanges();
+    }
   }
 
   async loadMore(event?: any) {
@@ -73,14 +83,14 @@ export class Tab1Page {
     const result = await window.electronAPI.getPrestamos(this.offset, this.limit);
     this.prestamos = [...this.prestamos, ...result.prestamos];
     this.filteredPrestamos = this.prestamos
-    console.log(this.prestamos)
     this.offset += this.limit;
     this.loading = false;
 
-    event.target.complete();
-
-    if (result.prestamos.length < this.limit) {
-      event.target.disabled = true; // No hay más libros
+    if (event) {
+      event.target.complete();
+      if (result.prestamos.length < this.limit) {
+        event.target.disabled = true;
+      }
     }
   }
 
@@ -115,6 +125,11 @@ export class Tab1Page {
           color: 'success'
         });
         await toast.present();
+        this.offset = 0;
+        this.prestamos = [];
+        this.filteredPrestamos = [];
+        await this.loadMore();
+        this.cdr.detectChanges();
       } else {
         const toast = await this.toastCtrl.create({
           message: 'Error al eliminar el préstamo',

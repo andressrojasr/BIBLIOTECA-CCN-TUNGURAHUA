@@ -24,7 +24,7 @@ export class AddPrestamoComponent  implements OnInit {
     isProcessing = false;
     
   
-    constructor() {
+    constructor(private modalController: ModalController) {
       this.prestamoForm = this.fb.group({
         id: ['', []],
         usuario: [, [Validators.required]],
@@ -67,6 +67,7 @@ export class AddPrestamoComponent  implements OnInit {
                 color: 'success'
               });
               await toast.present();
+              this.modalController.dismiss({ success: true });
             } else {
               let message ='Error al agregar el prestamo'
               const toast = await this.toastCtrl.create({

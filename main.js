@@ -1,15 +1,22 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
-const { ipcMain } = require('electron');
+const { ipcMain, dialog } = require('electron');
+const fs = require('fs');
 const db = require('./db');
-require('electron-reload')(__dirname, {
-  electron: require(`${__dirname}/node_modules/electron`)
-});
+
+if (process.env.NODE_ENV === 'development') {
+  require('electron-reload')(__dirname, {
+    electron: require(`${__dirname}/node_modules/electron`)
+  });
+}
 
 function createWindow () {
   const win = new BrowserWindow({
     width: 1280,
     height: 1280,
+    icon: path.join(__dirname, '/src/assets', 'Logo Colores.png'),
+    frame: true,
+    resizable: false,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: true,
@@ -19,11 +26,12 @@ function createWindow () {
   const isDev = process.env.NODE_ENV === 'development';
   if (isDev) {
     win.loadURL('http://localhost:4200');
+    win.maximize();
   }
   else{
     win.loadFile(path.join(__dirname, 'www/index.html'));
+    win.maximize();
   }
-  win.webContents.openDevTools();
 }
 
 
@@ -154,15 +162,33 @@ ipcMain.handle('updateBook', async (event, book) => {
 
 ipcMain.handle('deleteBook', async (event, bookId) => {
   return new Promise((resolve, reject) => {
-    db.run(`DELETE FROM books WHERE id = ?`, [bookId], function (err) {
-      if (err) {
-        reject({ success: false, message: 'Error al eliminar el libro', error: err });
-      } else {
-        resolve({ success: true, message: 'Libro eliminado correctamente' });
+    // Primero verificar si hay préstamos para ese libro
+    db.get(
+      `SELECT COUNT(*) AS count FROM prestamos WHERE libroId = ?`,
+      [bookId],
+      (err, row) => {
+        if (err) {
+          return reject({ success: false, message: 'Error al verificar préstamos', error: err });
+        }
+
+        if (row.count > 0) {
+          // No permitir eliminar
+          return resolve({ success: false, message: 'No se puede eliminar el libro porque tiene préstamos registrados.' });
+        }
+
+        // Si no tiene préstamos, eliminar libro
+        db.run(`DELETE FROM books WHERE id = ?`, [bookId], function (err) {
+          if (err) {
+            reject({ success: false, message: 'Error al eliminar el libro', error: err });
+          } else {
+            resolve({ success: true, message: 'Libro eliminado correctamente' });
+          }
+        });
       }
-    });
+    );
   });
 });
+
 
 ipcMain.handle('getUsers', async (event, offset,limit) => {
   return new Promise((resolve, reject) => {
@@ -271,15 +297,33 @@ ipcMain.handle('updateUser', async (event, user) => {
 
 ipcMain.handle('deleteUser', async (event, userId) => {
   return new Promise((resolve, reject) => {
-    db.run(`DELETE FROM usuarios WHERE id = ?`, [userId], function (err) {
-      if (err) {
-        reject({ success: false, message: 'Error al eliminar usuario', error: err });
-      } else {
-        resolve({ success: true, message: 'Usuario eliminado correctamente' });
+    // Primero verificar si hay préstamos para ese usuario
+    db.get(
+      `SELECT COUNT(*) AS count FROM prestamos WHERE usuarioId = ?`,
+      [userId],
+      (err, row) => {
+        if (err) {
+          return reject({ success: false, message: 'Error al verificar préstamos', error: err });
+        }
+
+        if (row.count > 0) {
+          // No permitir eliminar
+          return resolve({ success: false, message: 'No se puede eliminar el usuario porque tiene préstamos registrados.' });
+        }
+
+        // Si no tiene préstamos, eliminar usuario
+        db.run(`DELETE FROM usuarios WHERE id = ?`, [userId], function (err) {
+          if (err) {
+            reject({ success: false, message: 'Error al eliminar usuario', error: err });
+          } else {
+            resolve({ success: true, message: 'Usuario eliminado correctamente' });
+          }
+        });
       }
-    });
+    );
   });
 });
+
 
 ipcMain.handle('getPrestamos', async (event, offset, limit) => {
   return new Promise((resolve, reject) => {
@@ -458,4 +502,61 @@ ipcMain.handle('deletePrestamo', async (event, prestamoId) => {
       }
     });
   });
+});
+
+ipcMain.handle('changePassword', async (event, passwordActual, passwordNueva ) => {
+  return new Promise((resolve, reject) => {
+    // Paso 1: Verificar contraseña actual
+    const querySelect = `SELECT password FROM users WHERE username = 'admin'`;
+    db.get(querySelect, (err, row) => {
+      if (err) {
+        return reject({ success: false, message: 'Error al buscar usuario', error: err });
+      }
+      if (!row) {
+        return resolve({ success: false, message: 'Usuario no encontrado' });
+      }
+      if (row.password !== passwordActual) {
+        return resolve({ success: false, message: 'Contraseña actual incorrecta' });
+      }
+
+      // Paso 2: Actualizar contraseña
+      const queryUpdate = `UPDATE users SET password = ? WHERE username = 'admin'`;
+      db.run(queryUpdate, [passwordNueva], function (err) {
+        if (err) {
+          return reject({ success: false, message: 'Error al actualizar contraseña', error: err });
+        }
+        resolve({ success: true, message: 'Contraseña cambiada correctamente' });
+      });
+    });
+  });
+});
+
+const isDev = process.env.NODE_ENV === 'development';
+const dbPath = isDev
+  ? path.join(__dirname, 'data', 'app.db')
+  : path.join(app.getPath('userData'), 'app.db');
+
+ipcMain.handle('exportDatabase', async (event) => {
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    title: 'Guardar copia de seguridad',
+    filters: [{ name: 'Base de datos SQLite', extensions: ['db'] }]
+  });
+  if (canceled || !filePath) {
+    return { success: false, message: 'Guardado cancelado' };
+  }
+  fs.copyFileSync(dbPath, filePath);
+  return { success: true, message: 'Base de datos exportada correctamente' };
+});
+
+ipcMain.handle('importDatabase', async (event) => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Selecciona la base de datos para importar',
+    filters: [{ name: 'Base de datos SQLite', extensions: ['db'] }],
+    properties: ['openFile']
+  });
+  if (canceled || !filePaths.length) {
+    return { success: false, message: 'Importación cancelada' };
+  }
+  fs.copyFileSync(filePaths[0], dbPath);
+  return { success: true, message: 'Base de datos importada correctamente' };
 });

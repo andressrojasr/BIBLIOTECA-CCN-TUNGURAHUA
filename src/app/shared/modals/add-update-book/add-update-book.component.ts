@@ -1,6 +1,6 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToastController } from '@ionic/angular';
+import { ModalController, ToastController } from '@ionic/angular';
 import { Book } from 'src/app/models/book.model';
 
 
@@ -22,7 +22,7 @@ export class AddUpdateBookComponent  implements OnInit {
   isProcessing = false;
   
 
-  constructor() {
+  constructor(private modalController: ModalController) {
     this.bookForm = this.fb.group({
       id: ['', [Validators.required, Validators.min(1)]],
       titulo: ['', [Validators.required]],
@@ -111,6 +111,7 @@ export class AddUpdateBookComponent  implements OnInit {
               color: 'success'
             });
             await toast.present();
+            this.modalController.dismiss(true); // Cerrar el modal y retornar éxito
           } else {
             let message ='Error al agregar el libro'
             if (response.error = 'DUPLICATE_PRIMARY_KEY') message = 'Ya existe un libro con ese código'
@@ -142,6 +143,7 @@ export class AddUpdateBookComponent  implements OnInit {
           color: 'success'
         });
         await toast.present();
+        this.modalController.dismiss(true); // Cerrar el modal y retornar éxito
       } else {
         const toast = await this.toastCtrl.create({
           message: 'Error al editar el libro',

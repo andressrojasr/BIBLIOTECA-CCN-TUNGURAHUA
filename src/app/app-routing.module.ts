@@ -21,7 +21,11 @@ const routes: Routes = [
   {
     path: '**',
     redirectTo: 'login'
+  },  {
+    path: 'config',
+    loadChildren: () => import('./config/config.module').then( m => m.ConfigPageModule)
   },
+
 ];
 @NgModule({
   imports: [

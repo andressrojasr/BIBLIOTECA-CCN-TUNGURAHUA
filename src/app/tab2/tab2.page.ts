@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, OnInit } from '@angular/core';
+import { Component, inject, ViewChild, OnInit, ChangeDetectorRef } from '@angular/core';
 import { AlertController, IonContent, ToastController } from '@ionic/angular';
 import { UtilsService } from '../services/utils.service';
 import { Book } from '../models/book.model';
@@ -14,7 +14,7 @@ export class Tab2Page{
 
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
-  constructor(private utils: UtilsService, private toastCtrl: ToastController, private alertCtrl: AlertController) {
+  constructor(private utils: UtilsService, private toastCtrl: ToastController, private alertCtrl: AlertController, private cdr: ChangeDetectorRef) {
     this.loadMore();
   }
 
@@ -46,13 +46,17 @@ export class Tab2Page{
       componentProps: { book }
     })
     if (success) {
-      this.loadMore()
       const toast = await this.toastCtrl.create({
           message: 'Libro editado con exito',
           duration: 3000,
           color: 'success'
         });
       toast.present()
+      this.offset = 0;
+      this.books = [];
+      this.filteredBooks = [];
+      await this.loadMore();
+      this.cdr.detectChanges();
     };
   }
   
@@ -62,7 +66,13 @@ export class Tab2Page{
       cssClass: 'add-update-modal',
       componentProps: {  }
     })
-    if (success) 'Agregado con exito';
+    if (success){
+      this.offset = 0;
+      this.books = [];
+      this.filteredBooks = [];
+      await this.loadMore();
+      this.cdr.detectChanges();
+    }
   }
 
   async loadMore(event?: any) {
@@ -76,10 +86,11 @@ export class Tab2Page{
     this.offset += this.limit;
     this.loading = false;
 
-    event.target.complete();
-
-    if (result.books.length < this.limit) {
-      event.target.disabled = true; // No hay más libros
+    if (event) {
+      event.target.complete();
+      if (result.books.length < this.limit) {
+        event.target.disabled = true;
+      }
     }
   }
 
@@ -123,16 +134,26 @@ export class Tab2Page{
           color: 'success'
         });
         await toast.present();
+        this.offset = 0;
+        this.books = [];
+        this.filteredBooks = [];
+        await this.loadMore();
+        this.cdr.detectChanges();
       } else {
         const toast = await this.toastCtrl.create({
-          message: 'Error al eliminar el libro',
+          message: result.message || 'Error al eliminar el libro',
           duration: 2000,
           color: 'danger'
         });
         await toast.present();
       }
     } catch (err) {
-      console.error('❌ Error al eliminar el libro:', err);
+      const toast = await this.toastCtrl.create({
+          message: 'Error al eliminar el libro: ' + err,
+          duration: 2000,
+          color: 'danger'
+        });
+        await toast.present();
     }
   }
 
