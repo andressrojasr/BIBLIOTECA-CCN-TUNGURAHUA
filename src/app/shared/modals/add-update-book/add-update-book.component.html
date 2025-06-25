@@ -1,0 +1,82 @@
+<app-header [title]="title" [isModal]="true"></app-header>
+<ion-content [fullscreen]="true">
+    <div class="form-wrapper">
+        <form  class="login-form" [formGroup]="bookForm" (ngSubmit)="onSubmit()">
+
+            <ion-item *ngIf="!book">
+              <ion-input placeholder="Código" fill="outline" formControlName="id" type="number">
+                <ion-icon slot="start" color="primary" name="qr-code-outline" aria-hidden="true"></ion-icon>
+              </ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="bookForm.get('id')?.touched && bookForm.get('id')?.errors?.['min'] && !book">
+              <p class="ion-padding-start">El número código no puede ser menor a 1</p>
+            </ion-text>
+            <ion-text color="danger" *ngIf="bookForm.get('id')?.touched && bookForm.get('id')?.errors?.['required'] && !book">
+              <p class="ion-padding-start">El código es requerido</p>
+            </ion-text>
+
+            <ion-item>
+              <ion-input placeholder="Titulo (Requerido)" fill="outline" formControlName="titulo">
+                <ion-icon slot="start" color="primary" name="book-outline" aria-hidden="true"></ion-icon>
+              </ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="bookForm.get('titulo')?.touched && bookForm.get('titulo')?.errors?.['required']">
+              <p class="ion-padding-start">El titulo es requerido</p>
+            </ion-text>
+    
+            <ion-item>
+              <ion-input placeholder="Autor (Requerido)" fill="outline" formControlName="autor">
+                <ion-icon slot="start" color="primary" name="person-outline" aria-hidden="true"></ion-icon>
+              </ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="bookForm.get('autor')?.touched && bookForm.get('autor')?.errors?.['required']">
+              <p class="ion-padding-start">El autor es requerido</p>
+            </ion-text>
+
+            <ion-item>
+              <ion-input placeholder="Estanteria" fill="outline" formControlName="estanteria" type="number">
+                <ion-icon slot="start" color="primary" name="albums-outline" aria-hidden="true"></ion-icon>
+              </ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="bookForm.get('estanteria')?.touched && bookForm.get('estanteria')?.errors?.['min']">
+              <p class="ion-padding-start">El número de estanteria no debe ser menor a 1</p>
+            </ion-text>
+
+            <ion-item>
+              <ion-input placeholder="Fila" fill="outline" formControlName="fila" type="number">
+                <ion-icon slot="start" color="primary" name="reorder-three-outline" aria-hidden="true"></ion-icon>
+              </ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="bookForm.get('fila')?.touched && bookForm.get('fila')?.errors?.['min']">
+              <p class="ion-padding-start">El número de fila no debe ser menor a 1</p>
+            </ion-text>
+
+            <ion-item>
+              <ion-input placeholder="Caja" fill="outline" formControlName="caja" type="number">
+                <ion-icon slot="start" color="primary" name="cube-outline" aria-hidden="true"></ion-icon>
+              </ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="bookForm.get('caja')?.touched && bookForm.get('caja')?.errors?.['min']">
+              <p class="ion-padding-start">El número de caja no debe ser menor a 1</p>
+            </ion-text>
+
+            <ion-item>
+              <ion-input placeholder="Número de ejemplares (Requerido)" fill="outline" formControlName="ejemplares" type="number">
+                <ion-icon slot="start" color="primary" name="copy-outline" aria-hidden="true"></ion-icon>
+              </ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="bookForm.get('ejemplares')?.touched && bookForm.get('ejemplares')?.errors?.['required']">
+              <p class="ion-padding-start">El número de ejemplares es requerido</p>
+            </ion-text>
+            <ion-text color="danger" *ngIf="bookForm.get('ejemplares')?.touched && bookForm.get('ejemplares')?.errors?.['min']">
+              <p class="ion-padding-start">El número de ejemplares no debe ser menor a 1</p>
+            </ion-text>
+    
+    
+    
+            <ion-button expand="block" type="submit" [disabled]="bookForm.invalid || isProcessing" (click)="onSubmit()" color="tertiary">
+            {{book ? 'Editar Libro' : 'Agregar Libro'}}
+            </ion-button>
+        </form>
+    </div>
+</ion-content>

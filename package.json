@@ -3,13 +3,18 @@
   "version": "0.0.1",
   "author": "Ionic Framework",
   "homepage": "https://ionicframework.com/",
+  "main": "main.js",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
+    "build": "ionic build",
+    "postbuild": "node fix-base.js",
+    "start": "npm run build && npm run postbuild && electron .",
+    "electron-dev": "cross-env NODE_ENV=development electron .",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "dist": "npm run build && npm run postbuild && electron-builder",
+    "dist:win": "npm run build && npm run postbuild && electron-builder --win"
   },
   "private": true,
   "dependencies": {
@@ -21,14 +26,19 @@
     "@angular/platform-browser": "^19.0.0",
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
+    "@capacitor-community/sqlite": "^7.0.0",
+    "@capacitor/android": "7.2.0",
     "@capacitor/app": "7.0.1",
     "@capacitor/core": "7.2.0",
     "@capacitor/haptics": "7.0.1",
+    "@capacitor/ios": "7.2.0",
     "@capacitor/keyboard": "7.0.1",
+    "@capacitor/splash-screen": "^7.0.1",
     "@capacitor/status-bar": "7.0.1",
     "@ionic/angular": "^8.0.0",
     "ionicons": "^7.0.0",
     "rxjs": "~7.8.0",
+    "sqlite3": "^5.1.7",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },
@@ -47,6 +57,10 @@
     "@types/jasmine": "~5.1.0",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
+    "cross-env": "^7.0.3",
+    "electron": "^36.2.1",
+    "electron-builder": "^26.0.12",
+    "electron-reload": "^2.0.0-alpha.1",
     "eslint": "^9.16.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsdoc": "^48.2.1",
@@ -60,5 +74,20 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "~5.6.3"
   },
-  "description": "An Ionic project"
+  "description": "An Ionic project",
+  "build": {
+  "appId": "com.ccn.tungurahua",
+  "productName": "Biblioteca CCE Tungurahua",
+  "files": [
+    "www/**/*",
+    "main.js",
+    "preload.js",
+    "db.js",
+    "node_modules/**/*"
+  ],
+  "win": {
+    "target": "nsis",
+    "icon": "src/assets/Logo Colores.png"
+  }
+}
 }

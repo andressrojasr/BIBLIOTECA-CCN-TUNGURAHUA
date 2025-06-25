@@ -1,17 +1,57 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Tab 1
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
+<app-header title="Gestión de préstamos de libros" [showCloseSessionButton]="true"></app-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" scrollEvents="true" (ionScroll)="onScroll($event)">
+  <div class="options">
+    <ion-searchbar mode="ios" animated="true" placeholder="Buscar Préstamo" [(ngModel)]="searchTerm" (ionInput)="filterPrestamos()"></ion-searchbar>
+        <ion-select aria-label="Fruit" interface="popover" label="Filtrar por: " value="id" fill="outline" (ionChange)="filterPrestamos()" [(ngModel)]="selectedFilter">
+          <ion-select-option value="id">Código</ion-select-option>
+          <ion-select-option value="cedula">Cédula</ion-select-option>
+          <ion-select-option value="nombres">Nombres</ion-select-option>
+          <ion-select-option value="apellidos">Apellidos</ion-select-option>
+          <ion-select-option value="libro">Libro</ion-select-option>
+        </ion-select>
+    <ion-button expand="full" size="medium" color="tertiary" shape="round" style="--color: white;" (click)="addPrestamo()">
+      <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+      Nuevo Préstamo
+    </ion-button>
+  </div>
+  <ion-grid class="table">
+    <ion-row class="header-row">
+      <ion-col size="1" class="first"><strong>Código</strong></ion-col>
+      <ion-col size="3"><strong>Libro</strong></ion-col>
+      <ion-col size="2"><strong>Usuario</strong></ion-col>
+      <ion-col size="1.5"><strong>Fecha Préstamo</strong></ion-col>
+      <ion-col size="1.5"><strong>Fecha Devolución</strong></ion-col>
+      <ion-col size="1"><strong>Estado</strong></ion-col>
+      <ion-col size="2"><strong>Acciones</strong></ion-col>
+    </ion-row>
 
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+    <ion-row *ngFor="let prestamo of filteredPrestamos" class="rows ion-align-items-center">
+      <ion-col size="1" class="first">{{ prestamo.id }}</ion-col>
+      <ion-col size="3">{{ prestamo.libro.titulo }} - {{prestamo.libro.id}}</ion-col>
+      <ion-col size="2">{{ prestamo.usuario.apellidos + " " + prestamo.usuario.nombres }} - {{prestamo.usuario.cedula}} </ion-col>
+      <ion-col size="1.5"> {{ prestamo.fechaPrestamo }}</ion-col>
+      <ion-col size="1.5">{{ prestamo.fechaDevolucion }}</ion-col>
+      <ion-col size="1" *ngIf="!prestamo.fechaDevolucion"><ion-badge mode="ios" color="tertiary">Activo</ion-badge></ion-col>
+      <ion-col size="1" *ngIf="prestamo.fechaDevolucion"><ion-badge mode="ios">Finalizado</ion-badge></ion-col>
+      <ion-col size="2">
+        <ion-button color="tertiary" shape="round" (click)="editPrestamo(prestamo)">
+          <ion-icon name="create-outline"></ion-icon>
+        </ion-button>
+        <ion-button color="primary" shape="round"  (click)="confirmDelete(prestamo)" *ngIf="!prestamo.fechaDevolucion">
+          <ion-icon name="trash-outline"></ion-icon>
+        </ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="padding: 15px;" *ngIf="showScrollToTop">
+    <ion-fab-button color="secondary" (click)="scrollToTop()">
+      <ion-icon name="chevron-up-circle"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMore($event)">
+    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más libros...">
+    </ion-infinite-scroll-content>
+  </ion-infinite-scroll>
 </ion-content>
+
